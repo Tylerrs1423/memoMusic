@@ -1,10 +1,17 @@
 from fastapi import APIRouter
+from app.models import Frontend, Session
 
 router = APIRouter()
 
 
-@router.post("/create-session")
-def create_session(session: Session):
-    db.sessions.insert_one(session.model_dump())
-    return {"message": "Session created successfully!"}
+@router.post("/start-session")
+def start_session(frontend: Frontend):
+    session = Session(
+        subject=frontend.subject,
+        concepts=frontend.concepts,
+        music_genre=frontend.music_genre,
+        notes=frontend.notes
+    )
+    
+    return {"message": "Session started successfully!"}
 

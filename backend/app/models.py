@@ -11,6 +11,7 @@ class Frontend(BaseModel):
     subject: str
     concepts: List[str]
     music_genre: str
+    notes: str
 
 class Gemini(BaseModel):
     string: str
@@ -26,6 +27,18 @@ class ParsedLyrics(BaseModel):
     practiced_lyrics: List[str]
     blanks: List[Blank]
 
+class ElevenUrl(BaseModel):
+    url: str
 
+class Session(BaseModel):
+    session_id: str
+    concepts: List[str]
+    music_genre: str
+    lyrics: List[str]
+    practiced_lyrics: List[str]
+    blanks: List[Blank]
+    audio_url: str
+    created_at: datetime
+    updated_at: datetime
 
     
