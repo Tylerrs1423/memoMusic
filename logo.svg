@@ -1,0 +1,30 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="memoLogoTitle memoLogoDesc">
+  <title id="memoLogoTitle">MemoMusic logo</title>
+  <desc id="memoLogoDesc">Stylised bookmark blending into a musical note</desc>
+  <defs>
+    <linearGradient id="memoGradient" x1="22" y1="30" x2="138" y2="132" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1" />
+      <stop offset="0.5" stop-color="#8B5CF6" />
+      <stop offset="1" stop-color="#EC4899" />
+    </linearGradient>
+    <linearGradient id="memoStem" x1="102" y1="52" x2="122" y2="122" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC" />
+      <stop offset="1" stop-color="#C7D2FE" />
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="160" height="160" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#4C1D95" flood-opacity="0.35" />
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path
+      d="M42 26h64c7.7 0 14 6.3 14 14v44c0 4.4-3.6 8-8 8h-40l-18 18-18-18c-4.4 0-8-3.6-8-8V40c0-7.7 6.3-14 14-14Z"
+      fill="url(#memoGradient)"
+      opacity="0.92"
+    />
+    <path
+      d="M114 52c6.627 0 12 5.373 12 12v44.5c0 10.77-8.73 19.5-19.5 19.5S87 119.27 87 108.5 95.73 89 106.5 89c3.76 0 7.28 1.05 10.27 2.87V64h-14c-6.63 0-12-5.37-12-12 0-6.63 5.37-12 12-12h11.23Z"
+      fill="url(#memoStem)"
+      opacity="0.95"
+    />
+  </g>
+</svg>
