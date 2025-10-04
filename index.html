@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memo Music · Web Interface</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="tech-grid" aria-hidden="true"></div>
+    <div class="floating-symbols" aria-hidden="true"></div>
+
+    <header class="top-nav">
+      <div class="brand" aria-label="Memo Music">
+        <span class="brand-mark">Memo</span>
+        <span class="brand-highlight">Music</span>
+      </div>
+      <nav aria-label="Primary navigation">
+        <ul class="nav-list">
+          <li><a href="#menu" class="nav-link">Menu</a></li>
+          <li><a href="#selectionPanel" class="nav-link">Create</a></li>
+          <li><a href="#summaryCard" class="nav-link">Saved Music</a></li>
+          <li><a href="#profile" class="nav-link">Profile</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="app-shell">
+      <section class="hero" id="menu">
+        <div class="badge">Memo Music Web</div>
+        <h1 class="hacker-title">Memo Music</h1>
+        <p>
+          Launch a capsule, tune the music energy, and align it with the topic you want to master.
+          Everything happens right here in your browser.
+        </p>
+        <button id="createButton" class="cta">Open the creator</button>
+        <div class="hero-meta">
+          <div>
+            <span class="meta-label">Ambiences</span>
+            <span class="meta-value">Focus · Boost · Ambient · Jazz</span>
+          </div>
+          <div>
+            <span class="meta-label">Subjects</span>
+            <span class="meta-value">Math · History · Sciences · Languages</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="selectionPanel" aria-live="polite">
+        <header class="panel-header">
+          <div>
+            <p class="panel-overline">Personalized capsule</p>
+            <h2>Compose your music & study duo</h2>
+          </div>
+          <button id="closePanel" class="icon-button" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+
+        <div class="panel-body">
+          <div class="selections">
+            <section class="selection-group" data-group="music">
+              <h3>1. Choose your music type</h3>
+              <p class="group-hint">Every ambience is calibrated for a different focus intensity.</p>
+              <div class="option-grid">
+                <button class="option-card" data-type="music" data-id="focus-lofi">
+                  <div class="accent"></div>
+                  <h4>Focus Lofi</h4>
+                  <p>Muted beats and soft pianos to deep dive into key concepts.</p>
+                  <span class="chip">72-82 BPM</span>
+                </button>
+                <button class="option-card" data-type="music" data-id="boost-pop">
+                  <div class="accent"></div>
+                  <h4>Boost Pop</h4>
+                  <p>Bright hooks and crisp drums when you need rhythm-driven memorization.</p>
+                  <span class="chip">100-120 BPM</span>
+                </button>
+                <button class="option-card" data-type="music" data-id="deep-ambient">
+                  <div class="accent"></div>
+                  <h4>Deep Ambient</h4>
+                  <p>Immersive pads and evolving textures to sustain long focus sessions.</p>
+                  <span class="chip">Free Tempo</span>
+                </button>
+                <button class="option-card" data-type="music" data-id="neo-jazz">
+                  <div class="accent"></div>
+                  <h4>Neo Jazz</h4>
+                  <p>Modern improvisations and fluid grooves for stylish memorization.</p>
+                  <span class="chip">88-108 BPM</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="selection-group" data-group="topic">
+              <h3>2. Select your study topic</h3>
+              <p class="group-hint">We adapt structure and recaps to the topic you want to master.</p>
+              <div class="option-grid option-grid--topics">
+                <button class="option-card" data-type="topic" data-id="mathematiques">
+                  <div class="accent"></div>
+                  <h4>Mathematics</h4>
+                  <p>Visual logic, guided proofs, and spaced reminders.</p>
+                </button>
+                <button class="option-card" data-type="topic" data-id="histoire">
+                  <div class="accent"></div>
+                  <h4>History</h4>
+                  <p>Interactive timelines, milestone events, and engaging storytelling.</p>
+                </button>
+                <button class="option-card" data-type="topic" data-id="sciences">
+                  <div class="accent"></div>
+                  <h4>Sciences</h4>
+                  <p>Guided experiments, dynamic diagrams, and sharp summaries.</p>
+                </button>
+                <button class="option-card" data-type="topic" data-id="langues">
+                  <div class="accent"></div>
+                  <h4>Languages</h4>
+                  <p>Contextual vocabulary, active repetition, and pronunciation drills.</p>
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <aside class="summary" id="summaryCard">
+            <p class="summary-label">Memo Music suggestion</p>
+            <h3 id="summaryTitle">Pick an ambience and a topic</h3>
+            <p id="summaryDescription" class="summary-description">
+              Your tailored capsule will appear here, ready to deploy.
+            </p>
+            <div class="summary-meta" id="summaryMeta" hidden>
+              <div>
+                <span class="meta-label">Ambience</span>
+                <span class="meta-value" id="summaryMusic"></span>
+              </div>
+              <div>
+                <span class="meta-label">Topic</span>
+                <span class="meta-value" id="summaryTopic"></span>
+              </div>
+            </div>
+            <button class="cta secondary" id="launchButton" disabled>Deploy the capsule</button>
+          </aside>
+        </div>
+      </section>
+      <footer class="profile-placeholder" id="profile">
+        <h2>Profile dashboard</h2>
+        <p>
+          Sync your study streak, manage saved capsules, and personalize your Memo Music identity.
+          Coming soon.
+        </p>
+      </footer>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
