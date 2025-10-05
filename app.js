@@ -658,31 +658,91 @@ createForm.addEventListener('submit', (event) => {
     customStyle = '';
   }
 
-  const timestamp = new Date();
-  const title = `${displayStyle} memo mix`;
-  const description = summarizeNotes(notesValue || topicValue || displayTopic);
+  // Show loading state
+  generateResult.hidden = false;
+  resultTitle.textContent = 'Generating your educational song...';
+  resultDescription.textContent = 'Creating lyrics and music with AI...';
+  saveTrackBtn.disabled = true;
+  saveTrackBtn.textContent = 'Generating...';
 
-  currentDraft = {
-    id: Date.now(),
-    title,
-    description,
-    topic: displayTopic,
-    notes: notesValue,
-    style: displayStyle,
+  // Make API call to backend
+  const requestData = {
+    subject: displayTopic,
     concepts: [...conceptBuffer],
-    audioUrl: previewAudio.querySelector('source').src,
-    createdAt: timestamp.toISOString()
+    music_genre: displayStyle,
+    notes: notesValue,
+    grade_level: "high school"
   };
 
-  resultTitle.textContent = `${title} — ${displayTopic}`;
-  resultDescription.textContent = description;
-  if (conceptBuffer.length) {
-    resultDescription.textContent += ` (Concept cues: ${conceptBuffer.join(', ')})`;
-  }
-  generateResult.hidden = false;
-  saveTrackBtn.disabled = false;
-  saveTrackBtn.textContent = 'Save to library';
-  previewAudio.currentTime = 0;
+  console.log('Sending request to backend:', requestData);
+  
+  fetch('http://localhost:8000/start-session', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestData)
+  })
+  .then(response => {
+    console.log('Backend response status:', response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log('Backend response data:', data);
+    const timestamp = new Date();
+    const title = `${displayStyle} memo mix`;
+    const description = summarizeNotes(notesValue || topicValue || displayTopic);
+
+    currentDraft = {
+      id: Date.now(),
+      title,
+      description,
+      topic: displayTopic,
+      notes: notesValue,
+      style: displayStyle,
+      concepts: [...conceptBuffer],
+      audioUrl: `http://localhost:8000${data.audio_url}`,
+      lyrics: data.lyrics,
+      createdAt: timestamp.toISOString()
+    };
+
+    resultTitle.textContent = `${title} — ${displayTopic}`;
+    resultDescription.textContent = description;
+    if (conceptBuffer.length) {
+      resultDescription.textContent += ` (Concept cues: ${conceptBuffer.join(', ')})`;
+    }
+    
+    // Show lyrics
+    if (data.lyrics && data.lyrics.length > 0) {
+      const lyricsDiv = document.createElement('div');
+      lyricsDiv.innerHTML = '<h4>Generated Lyrics:</h4>' + data.lyrics.map(line => `<p>${line}</p>`).join('');
+      resultDescription.appendChild(lyricsDiv);
+    }
+
+    // Update audio player with real audio
+    const audioSource = previewAudio.querySelector('source');
+    if (audioSource) {
+      const audioUrl = `http://localhost:8000${data.audio_url}`;
+      console.log('Setting audio source to:', audioUrl);
+      audioSource.src = audioUrl;
+      previewAudio.load(); // Reload the audio element
+      
+      // Add event listeners to debug audio loading
+      previewAudio.addEventListener('loadstart', () => console.log('Audio: Load started'));
+      previewAudio.addEventListener('canplay', () => console.log('Audio: Can play'));
+      previewAudio.addEventListener('error', (e) => console.log('Audio error:', e));
+    }
+
+    saveTrackBtn.disabled = false;
+    saveTrackBtn.textContent = 'Save to library';
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    resultTitle.textContent = 'Error generating song';
+    resultDescription.textContent = 'There was a problem creating your educational song. Please try again.';
+    saveTrackBtn.disabled = false;
+    saveTrackBtn.textContent = 'Try Again';
+  });
 });
 
 saveTrackBtn.addEventListener('click', () => {

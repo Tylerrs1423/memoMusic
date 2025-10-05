@@ -76,7 +76,7 @@ def create_composition_plan(lyrics: list, music_genre: str = "pop") -> dict:
     response.raise_for_status()
     plan = response.json()
 
-    # Inject exact lyrics into the first section
+
     if plan.get("sections"):
         plan["sections"][0]["lines"] = lyrics
         plan["sections"][0]["positive_local_styles"] = [music_genre]
@@ -110,4 +110,4 @@ def generate_educational_song(subject: str, concepts: list, music_genre: str = "
         "success": True,
         "lyrics": lyrics,
         "audio_data": audio_data
-    }
+    } 
