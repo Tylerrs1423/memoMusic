@@ -429,6 +429,26 @@ main {
   margin: 0 auto;
 }
 
+.result.stage-card.full-width .result-description {
+  width: 100%;
+  max-width: 100%;
+}
+
+.result.stage-card.full-width .result-description > div {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+
+/* Ensure audio player doesn't squish content */
+.custom-audio-player {
+  flex: none !important;
+  width: 100%;
+  max-width: 400px;
+  margin: 15px auto !important;
+}
+
 .section-shell__content--library .stage-card {
   height: 100%;
 }

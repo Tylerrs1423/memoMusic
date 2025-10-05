@@ -8,7 +8,7 @@ const navLinks = Array.from(document.querySelectorAll('.nav-link'));
 const header = document.querySelector('.site-header');
 const navToggle = document.querySelector('.nav-toggle');
 if (navToggle) {
-  navToggle.setAttribute('aria-expanded', 'false');
+navToggle.setAttribute('aria-expanded', 'false');
 }
 
 const createForm = document.getElementById('create-form');
@@ -90,7 +90,7 @@ function fallbackAnimate(element, keyframes, options) {
 async function initAnimationLibrary() {
   // Skip external motion library - use fallback only
   console.log('Using fallback animation library');
-  animateFn = fallbackAnimate;
+    animateFn = fallbackAnimate;
 }
 
 function getSectionIdFromHash(hash) {
@@ -781,7 +781,7 @@ if (pulseButton) {
 }
 
 if (createForm) {
-  createForm.addEventListener('submit', (event) => {
+createForm.addEventListener('submit', (event) => {
   event.preventDefault();
 
   // Check if required form elements exist
@@ -1050,7 +1050,7 @@ if (createForm) {
 
   // Extract session_id from audio_url
   const sessionId = data.audio_url.split('/').pop();
-  
+
   currentDraft = {
     id: Date.now(),
     session_id: sessionId, // Store session_id for MongoDB operations
@@ -1134,9 +1134,9 @@ if (createForm) {
       });
       
       if (resultDescription) {
-        resultDescription.appendChild(lyricsTitle);
-        resultDescription.appendChild(practiceContainer);
-        resultDescription.appendChild(toggleButton);
+      resultDescription.appendChild(lyricsTitle);
+      resultDescription.appendChild(practiceContainer);
+      resultDescription.appendChild(toggleButton);
       }
     }
 
@@ -1157,44 +1157,47 @@ if (createForm) {
       
       // Remove existing custom player if any
       if (resultDescription) {
-        const existingPlayer = resultDescription.querySelector('.custom-audio-player');
-        if (existingPlayer) {
-          existingPlayer.remove();
+      const existingPlayer = resultDescription.querySelector('.custom-audio-player');
+      if (existingPlayer) {
+        existingPlayer.remove();
         }
       }
       
       // Create custom audio player container - match app style
       const playerContainer = document.createElement('div');
       playerContainer.className = 'custom-audio-player';
-      playerContainer.style.cssText = `
-        width: 100%;
-        background: transparent;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px;
-        padding: 12px;
-        margin-top: 15px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      `;
+        playerContainer.style.cssText = `
+          flex: none !important;
+          width: 100%;
+          max-width: 400px;
+          background: transparent;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 8px;
+          padding: 8px;
+          margin: 15px auto;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        `;
       
-      // Create play/pause button - match your buttons
-      const playButton = document.createElement('button');
-      playButton.innerHTML = '▶';
-      playButton.style.cssText = `
-        width: 40px;
-        height: 40px;
-        border-radius: 6px;
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-        color: #ffffff;
-        font-size: 16px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-      `;
+        // Create play/pause button - match your buttons
+        const playButton = document.createElement('button');
+        playButton.innerHTML = '▶';
+        playButton.style.cssText = `
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.2);
+          color: #ffffff;
+          font-size: 14px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        `;
       
       // Simple hover effect
       playButton.addEventListener('mouseenter', () => {
@@ -1228,16 +1231,17 @@ if (createForm) {
       
       progressContainer.appendChild(progressBar);
       
-      // Create time display - match app text style
-      const timeDisplay = document.createElement('div');
-      timeDisplay.style.cssText = `
-        color: #cccccc;
-        font-size: 13px;
-        font-weight: 400;
-        min-width: 80px;
-        text-align: center;
-        font-family: inherit;
-      `;
+        // Create time display - match app text style
+        const timeDisplay = document.createElement('div');
+        timeDisplay.style.cssText = `
+          color: #cccccc;
+          font-size: 12px;
+          font-weight: 400;
+          min-width: 70px;
+          text-align: center;
+          font-family: inherit;
+          flex-shrink: 0;
+        `;
       timeDisplay.textContent = '0:00 / 0:00';
       
       // Add all elements to container
@@ -1247,7 +1251,7 @@ if (createForm) {
       
       // Add player to the result description
       if (resultDescription) {
-        resultDescription.appendChild(playerContainer);
+      resultDescription.appendChild(playerContainer);
       }
       
       // Audio control logic
@@ -1306,21 +1310,21 @@ if (createForm) {
     console.error('Error stack:', error.stack);
     
     if (resultTitle) {
-      resultTitle.textContent = 'Error generating song';
+    resultTitle.textContent = 'Error generating song';
     }
     if (resultDescription) {
-      resultDescription.textContent = `There was a problem creating your educational song. Error: ${error.message}`;
+    resultDescription.textContent = `There was a problem creating your educational song. Error: ${error.message}`;
     }
     if (saveTrackBtn) {
-      saveTrackBtn.disabled = false;
-      saveTrackBtn.textContent = 'Try Again';
+    saveTrackBtn.disabled = false;
+    saveTrackBtn.textContent = 'Try Again';
     }
   });
 });
 }
 
 if (saveTrackBtn) {
-  saveTrackBtn.addEventListener('click', () => {
+saveTrackBtn.addEventListener('click', () => {
   if (!currentDraft) {
     return;
   }
@@ -1381,7 +1385,7 @@ navLinks.forEach((link) => {
 });
 
 if (navToggle) {
-  navToggle.addEventListener('click', toggleNav);
+navToggle.addEventListener('click', toggleNav);
 }
 
 menuLink?.addEventListener('pointermove', handleMenuPointerMove);
@@ -1565,44 +1569,44 @@ class AudioPracticeController {
   createUI() {
     // Clear container
     this.container.innerHTML = '';
-    
-    // Create progress indicator
+  
+  // Create progress indicator
     this.progressContainer = document.createElement('div');
     this.progressContainer.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-    `;
-    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+  `;
+  
     this.progressText = document.createElement('span');
     this.progressText.textContent = 'Practice Progress: 0/4 completed';
     this.progressText.style.cssText = `
-      color: #ffffff;
-      font-size: 14px;
-      font-weight: 500;
-    `;
-    
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  
     this.progressBar = document.createElement('div');
     this.progressBar.style.cssText = `
-      width: 200px;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-      overflow: hidden;
-    `;
-    
+    width: 200px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  `;
+  
     this.progressFill = document.createElement('div');
     this.progressFill.style.cssText = `
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6);
-      transition: width 0.3s ease;
-    `;
-    
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: width 0.3s ease;
+  `;
+  
     this.progressBar.appendChild(this.progressFill);
     this.progressContainer.appendChild(this.progressText);
     this.progressContainer.appendChild(this.progressBar);
@@ -1631,9 +1635,9 @@ class AudioPracticeController {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: #ffffff;
       border: none;
-      border-radius: 8px;
+        border-radius: 8px;
       padding: 15px 30px;
-      font-size: 16px;
+        font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -1652,17 +1656,17 @@ class AudioPracticeController {
     this.currentInput.type = 'text';
     this.currentInput.placeholder = 'Type your answer...';
     this.currentInput.style.cssText = `
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.2);
+              background: rgba(255, 255, 255, 0.1);
+              border: 2px solid rgba(255, 255, 255, 0.2);
       border-radius: 8px;
       padding: 12px 16px;
-      color: #ffffff;
-      font-size: 16px;
+              color: #ffffff;
+              font-size: 16px;
       min-width: 200px;
-      text-align: center;
-      transition: all 0.3s ease;
-    `;
-    
+              text-align: center;
+              transition: all 0.3s ease;
+            `;
+            
     this.submitButton = document.createElement('button');
     this.submitButton.textContent = 'Submit Answer';
     this.submitButton.style.cssText = `
@@ -2193,7 +2197,7 @@ async function savePracticeProgressToMongoDB(sessionId, completedBlanks, totalBl
         last_practiced: new Date().toISOString()
       })
     });
-
+    
     if (response.ok) {
       console.log('Practice progress saved to MongoDB');
     } else {
