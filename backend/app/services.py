@@ -194,6 +194,8 @@ These should be:
 - Critical vocabulary words
 - Words that are central to understanding the topic
 
+CRITICAL: Each word must be UNIQUE - do not select the same word multiple times, even if it appears in different lines.
+
 Return ONLY a JSON array with the exact words (as they appear in the lyrics), one per line.
 Format: ["word1", "word2", "word3", "word4"]
 
@@ -216,10 +218,13 @@ CRITICAL: Return ONLY the JSON array. No explanations, no formatting, no extra t
         
         # Clean up the words and find their positions
         blanks_info = []
+        used_words = set()  # Track words we've already used
+        
         for word in selected_words:
             word = word.strip().strip('.,!?;:"()[]{}')
-            if word:
+            if word and word.lower() not in used_words:
                 # Find this word in the lyrics
+                found = False
                 for line_idx, line in enumerate(lyrics):
                     words_in_line = line.split()
                     for word_idx, line_word in enumerate(words_in_line):
@@ -231,9 +236,15 @@ CRITICAL: Return ONLY the JSON array. No explanations, no formatting, no extra t
                                 'original_word': clean_line_word,
                                 'full_word': line_word
                             })
+                            used_words.add(word.lower())
+                            found = True
                             break
-                    if blanks_info and blanks_info[-1]['original_word'].lower() == word.lower():
+                    if found:
                         break
+        
+        print(f"🎯 Selected {len(blanks_info)} unique words for blanks")
+        for i, blank in enumerate(blanks_info):
+            print(f"  {i+1}. '{blank['original_word']}' (line {blank['line_index']}, word {blank['word_position']})")
         
         return blanks_info[:num_blanks]
         
