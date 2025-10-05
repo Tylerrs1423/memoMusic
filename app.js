@@ -1,4 +1,4 @@
-import { initTextType } from './text-type.js';
+import { initDecryptedText } from './decrypted-text.js';
 import { initShinyText } from './shiny-text.js';
 import { initRibbons } from './ribbons.js';
 
@@ -9,22 +9,10 @@ const header = document.querySelector('.site-header');
 const navToggle = document.querySelector('.nav-toggle');
 navToggle.setAttribute('aria-expanded', 'false');
 
-const createForm = document.getElementById('create-form');
-const topicInput = document.getElementById('topic-input');
-const styleSelect = document.getElementById('style-select');
-const styleInput = document.getElementById('style-input');
-const generateResult = document.getElementById('generate-result');
-const resultTitle = document.getElementById('result-title');
-const resultDescription = document.getElementById('result-description');
-const saveTrackBtn = document.getElementById('save-track-btn');
-const previewAudio = document.getElementById('preview-audio');
-
-const conceptInput = document.getElementById('conceptInput');
-const addConceptButton = document.getElementById('addConcept');
-const conceptListElement = document.getElementById('conceptList');
-const topicSelect = document.getElementById('topic-select');
-const notesInput = document.getElementById('notes-input');
-const gradeLevelSelect = document.getElementById('grade-level-select');
+// These will be initialized in DOMContentLoaded
+let createForm, topicInput, styleSelect, styleInput, generateResult, resultTitle, resultDescription;
+let saveTrackBtn, previewAudio, conceptInput, addConceptButton, conceptListElement;
+let topicSelect, notesInput, gradeLevelSelect;
 
 const savedList = document.getElementById('saved-list');
 const savedEmptyState = document.getElementById('saved-empty');
@@ -150,7 +138,7 @@ function activateSection(sectionId, { withScroll = true, behavior = 'smooth', up
   focusSection(targetSection);
 
   if (sectionId === 'menu') {
-    initTextType({ restart: true });
+    initDecryptedText();
   }
 
   header?.classList.remove('open');
@@ -867,33 +855,35 @@ createForm.addEventListener('submit', (event) => {
   })
   .then(data => {
     console.log('Backend response data:', data);
-    const timestamp = new Date();
-    const title = `${displayStyle} memo mix`;
-    const description = summarizeNotes(notesValue || topicValue || displayTopic);
+  const timestamp = new Date();
+  const title = `${displayStyle} memo mix`;
+  const description = summarizeNotes(notesValue || topicValue || displayTopic);
 
-    currentDraft = {
-      id: Date.now(),
-      title,
-      description,
-      topic: displayTopic,
-      notes: notesValue,
-      style: displayStyle,
-      concepts: [...conceptBuffer],
-      audioUrl: `http://localhost:8000${data.audio_url}`,
-      lyrics: data.lyrics,
-      createdAt: timestamp.toISOString()
-    };
+  currentDraft = {
+    id: Date.now(),
+    title,
+    description,
+    topic: displayTopic,
+    notes: notesValue,
+    style: displayStyle,
+    concepts: [...conceptBuffer],
+    audioUrl: `http://localhost:8000${data.audio_url}`,
+    lyrics: data.lyrics,
+    practiced_lyrics: data.practiced_lyrics,
+    blanks: data.blanks,
+    createdAt: timestamp.toISOString()
+  };
 
-    resultTitle.textContent = `${title} — ${displayTopic}`;
-    resultDescription.textContent = description;
-    if (conceptBuffer.length) {
-      resultDescription.textContent += ` (Concept cues: ${conceptBuffer.join(', ')})`;
-    }
+  resultTitle.textContent = `${title} — ${displayTopic}`;
+  resultDescription.textContent = description;
+  if (conceptBuffer.length) {
+    resultDescription.textContent += ` (Concept cues: ${conceptBuffer.join(', ')})`;
+  }
     
-    // Show lyrics - clean and simple
+    // Show lyrics with practice interface
     if (data.lyrics && data.lyrics.length > 0) {
       const lyricsTitle = document.createElement('h3');
-      lyricsTitle.textContent = 'Lyrics';
+      lyricsTitle.textContent = 'Fill-in-the-Blank Practice';
       lyricsTitle.style.cssText = `
         color: #ffffff;
         font-size: 18px;
@@ -902,33 +892,50 @@ createForm.addEventListener('submit', (event) => {
         text-align: center;
       `;
       
-      const lyricsList = document.createElement('div');
-      lyricsList.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+      const practiceContainer = document.createElement('div');
+      practiceContainer.style.cssText = `
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
         margin-bottom: 20px;
       `;
       
-      data.lyrics.forEach((line, index) => {
-        if (line.trim()) {
-          const lineDiv = document.createElement('div');
-          lineDiv.style.cssText = `
-            font-size: 15px;
-            font-weight: 400;
-            color: #cccccc;
-            line-height: 1.5;
-            text-align: center;
-            padding: 4px 0;
-          `;
-          
-          lineDiv.innerHTML = line;
-          lyricsList.appendChild(lineDiv);
+      // Create practice lyrics with input fields
+      if (data.practiced_lyrics && data.blanks) {
+        createPracticeInterface(data.practiced_lyrics, data.blanks, practiceContainer);
+      } else {
+        // Fallback to regular lyrics display
+        createRegularLyricsDisplay(data.lyrics, practiceContainer);
+      }
+      
+      // Add original lyrics toggle
+      const toggleButton = document.createElement('button');
+      toggleButton.textContent = 'Show Original Lyrics';
+      toggleButton.style.cssText = `
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        padding: 8px 16px;
+        margin: 10px 0;
+        cursor: pointer;
+        font-size: 14px;
+      `;
+      
+      toggleButton.addEventListener('click', () => {
+        const isShowingOriginal = practiceContainer.querySelector('.original-lyrics');
+        if (isShowingOriginal) {
+          isShowingOriginal.remove();
+          toggleButton.textContent = 'Show Original Lyrics';
+        } else {
+          createRegularLyricsDisplay(data.lyrics, practiceContainer);
+          toggleButton.textContent = 'Hide Original Lyrics';
         }
       });
       
       resultDescription.appendChild(lyricsTitle);
-      resultDescription.appendChild(lyricsList);
+      resultDescription.appendChild(practiceContainer);
+      resultDescription.appendChild(toggleButton);
     }
 
     // Create custom audio player
@@ -1078,8 +1085,8 @@ createForm.addEventListener('submit', (event) => {
       });
     }
 
-    saveTrackBtn.disabled = false;
-    saveTrackBtn.textContent = 'Save to library';
+  saveTrackBtn.disabled = false;
+  saveTrackBtn.textContent = 'Save to library';
   })
   .catch(error => {
     console.error('Frontend error:', error);
@@ -1101,6 +1108,12 @@ saveTrackBtn.addEventListener('click', () => {
   savedTracks.unshift({ ...currentDraft });
   saveTracks();
   renderSavedTracks();
+  
+  // Refresh practice section if it exists
+  if (window.loadPracticeSongs) {
+    window.loadPracticeSongs();
+  }
+  
   saveTrackBtn.disabled = true;
   saveTrackBtn.textContent = 'Saved';
 });
@@ -1160,6 +1173,30 @@ window.addEventListener('hashchange', handleHashChange);
 window.addEventListener('popstate', handleHashChange);
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Initialize all form elements first
+  createForm = document.getElementById('create-form');
+  topicInput = document.getElementById('topic-input');
+  styleSelect = document.getElementById('style-select');
+  styleInput = document.getElementById('style-input');
+  generateResult = document.getElementById('generate-result');
+  resultTitle = document.getElementById('result-title');
+  resultDescription = document.getElementById('result-description');
+  saveTrackBtn = document.getElementById('save-track-btn');
+  previewAudio = document.getElementById('preview-audio');
+  conceptInput = document.getElementById('conceptInput');
+  addConceptButton = document.getElementById('addConcept');
+  conceptListElement = document.getElementById('conceptList');
+  topicSelect = document.getElementById('topic-select');
+  notesInput = document.getElementById('notes-input');
+  gradeLevelSelect = document.getElementById('grade-level-select');
+  
+  console.log('Form elements initialized:', {
+    createForm: !!createForm,
+    topicSelect: !!topicSelect,
+    styleSelect: !!styleSelect,
+    gradeLevelSelect: !!gradeLevelSelect
+  });
+  
   const initialSectionId = getSectionIdFromHash(window.location.hash) || 'menu';
   const shouldUpdateHash = !window.location.hash;
   activateSection(initialSectionId, {
@@ -1175,7 +1212,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (styleSelect) {
     setStyleInputState(styleSelect.value || '');
   }
-  initTextType();
+  initDecryptedText();
   initShinyText();
   initAnimationLibrary();
   initRibbons({
@@ -1187,157 +1224,483 @@ window.addEventListener('DOMContentLoaded', () => {
     enableShaderEffect: true
   });
   
-  // Initialize custom music cursor
-  initMusicCursor();
+  // Initialize scroll-based navigation
+  initScrollNavigation();
+  
+  // Initialize practice section
+  initPracticeSection();
 });
 
-// Custom Music Cursor
-class MusicCursor {
-  constructor() {
-    this.cursor = document.getElementById('music-cursor');
-    this.isActive = false;
-    this.currentAnimation = '';
-    this.isPlaying = false;
-    this.mouseX = 0;
-    this.mouseY = 0;
-    this.cursorX = 0;
-    this.cursorY = 0;
-    this.animationId = null;
-    
-    this.init();
+// Scroll-based navigation highlighting
+function initScrollNavigation() {
+  const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+  const sections = document.querySelectorAll('.section[id]');
+  
+  console.log('Initializing scroll navigation:', {
+    navLinks: navLinks.length,
+    sections: sections.length
+  });
+  
+  if (!navLinks.length || !sections.length) {
+    console.log('Missing elements for scroll navigation, retrying...');
+    setTimeout(initScrollNavigation, 200);
+    return;
   }
   
-  init() {
-    // Track mouse movement with throttling
-    let lastTime = 0;
-    document.addEventListener('mousemove', (e) => {
-      this.mouseX = e.clientX;
-      this.mouseY = e.clientY;
+  // Function to update active navigation
+  function updateActiveNav() {
+    const scrollPosition = window.scrollY + 100; // Offset for better detection
+    
+    let activeSection = null;
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      const sectionBottom = sectionTop + section.offsetHeight;
       
-      if (!this.animationId) {
-        this.animationId = requestAnimationFrame(() => {
-          this.updatePosition();
-          this.animationId = null;
-        });
+      if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+        activeSection = section.id;
       }
     });
     
-    // Add hover listeners to music elements
-    this.addMusicElementListeners();
+    // Remove active states from all nav links
+    navLinks.forEach(link => {
+      link.classList.remove('shiny-text-active');
+      link.removeAttribute('aria-current');
+    });
     
-    // Listen for audio events
-    this.addAudioListeners();
-    
-    // Show cursor on page load
-    this.show();
+    // Add active state to the current section's nav link
+    if (activeSection) {
+      const activeLink = document.querySelector(`.nav-link[href="#${activeSection}"]`);
+      if (activeLink) {
+        activeLink.classList.add('shiny-text-active');
+        activeLink.setAttribute('aria-current', 'page');
+      }
+    }
   }
   
-  updatePosition() {
-    if (this.cursor) {
-      // Smooth interpolation for lag-free movement
-      this.cursorX += (this.mouseX - this.cursorX) * 0.3;
-      this.cursorY += (this.mouseY - this.cursorY) * 0.3;
+  // Listen for scroll events
+  window.addEventListener('scroll', updateActiveNav);
+  
+  // Initial check
+  updateActiveNav();
+  
+  // Smooth scrolling for navigation links
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetId = link.getAttribute('href').substring(1);
+      const targetSection = document.getElementById(targetId);
       
-      this.cursor.style.transform = `translate(${this.cursorX - 16}px, ${this.cursorY - 16}px)`;
-    }
-  }
+      if (targetSection) {
+        const headerHeight = document.querySelector('.site-header').offsetHeight;
+        const targetPosition = targetSection.offsetTop - headerHeight - 20;
+        
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        });
+        
+        // Immediately update nav link active state when clicking
+        navLinks.forEach(navLink => {
+          navLink.classList.remove('shiny-text-active');
+          navLink.removeAttribute('aria-current');
+        });
+        link.classList.add('shiny-text-active');
+        link.setAttribute('aria-current', 'page');
+      }
+    });
+  });
+}
+
+// Practice Interface Functions
+function createPracticeInterface(practicedLyrics, blanks, container, track = null) {
+  console.log('Creating practice interface with', blanks.length, 'blanks');
   
-  show() {
-    if (this.cursor) {
-      this.cursor.classList.add('active');
-      this.isActive = true;
-    }
-  }
+  // Create progress indicator
+  const progressContainer = document.createElement('div');
+  progressContainer.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+  `;
   
-  hide() {
-    if (this.cursor) {
-      this.cursor.classList.remove('active');
-      this.isActive = false;
-    }
-  }
+  const progressText = document.createElement('span');
+  progressText.textContent = 'Practice Progress: 0/4 completed';
+  progressText.style.cssText = `
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+  `;
   
-  addAnimation(animation) {
-    if (this.cursor) {
-      this.cursor.classList.remove('bounce', 'pulse', 'spin', 'hovering', 'playing');
-      this.cursor.classList.add(animation);
-      this.currentAnimation = animation;
-    }
-  }
+  const progressBar = document.createElement('div');
+  progressBar.style.cssText = `
+    width: 200px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  `;
   
-  removeAnimation() {
-    if (this.cursor) {
-      this.cursor.classList.remove('bounce', 'pulse', 'spin', 'hovering', 'playing');
-      this.currentAnimation = '';
-    }
-  }
+  const progressFill = document.createElement('div');
+  progressFill.style.cssText = `
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: width 0.3s ease;
+  `;
   
-  addMusicElementListeners() {
-    // Add listeners to existing music elements
-    const musicElements = document.querySelectorAll('.music-cursor-target, audio, .result-player, .saved-tracks .card');
-    
-    musicElements.forEach(element => {
-      element.addEventListener('mouseenter', () => {
-        this.addAnimation('hovering');
-      });
+  progressBar.appendChild(progressFill);
+  progressContainer.appendChild(progressText);
+  progressContainer.appendChild(progressBar);
+  
+  // Create lyrics with input fields
+  const lyricsContainer = document.createElement('div');
+  lyricsContainer.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  `;
+  
+  // Track user answers
+  const userAnswers = {};
+  let completedBlanks = 0;
+  
+  practicedLyrics.forEach((line, lineIndex) => {
+    if (line.trim()) {
+      const lineContainer = document.createElement('div');
+      lineContainer.style.cssText = `
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #ffffff;
+      `;
       
-      element.addEventListener('mouseleave', () => {
-        if (!this.isPlaying) {
-          this.removeAnimation();
+      // Split line into words and handle blanks
+      const words = line.split(' ');
+      words.forEach((word, wordIndex) => {
+        if (word === '___') {
+          // Find the blank for this position
+          const blank = blanks.find(b => b.line_index === lineIndex && b.word_position === wordIndex);
+          
+          if (blank) {
+            const inputContainer = document.createElement('span');
+            inputContainer.style.cssText = `
+              position: relative;
+              display: inline-block;
+            `;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Type answer...';
+            input.style.cssText = `
+              background: rgba(255, 255, 255, 0.1);
+              border: 2px solid rgba(255, 255, 255, 0.2);
+              border-radius: 6px;
+              padding: 8px 12px;
+              color: #ffffff;
+              font-size: 16px;
+              min-width: 120px;
+              text-align: center;
+              transition: all 0.3s ease;
+            `;
+            
+            // Add focus/blur styling
+            input.addEventListener('focus', () => {
+              input.style.borderColor = '#6366f1';
+              input.style.background = 'rgba(255, 255, 255, 0.15)';
+            });
+            
+            input.addEventListener('blur', () => {
+              input.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              input.style.background = 'rgba(255, 255, 255, 0.1)';
+            });
+            
+            // Handle answer submission
+            input.addEventListener('keypress', (e) => {
+              if (e.key === 'Enter') {
+                checkAnswer(input, blank, inputContainer);
+              }
+            });
+            
+            input.addEventListener('blur', () => {
+              checkAnswer(input, blank, inputContainer);
+            });
+            
+            inputContainer.appendChild(input);
+            lineContainer.appendChild(inputContainer);
+            
+            // Store reference for progress tracking
+            userAnswers[`${lineIndex}-${wordIndex}`] = { input, blank, container: inputContainer, isCorrect: false };
+          }
+        } else {
+          // Regular word
+          const wordSpan = document.createElement('span');
+          wordSpan.textContent = word;
+          wordSpan.style.cssText = `
+            color: #cccccc;
+          `;
+          lineContainer.appendChild(wordSpan);
         }
       });
-    });
+      
+      lyricsContainer.appendChild(lineContainer);
+    }
+  });
+  
+  // Check answer function
+  function checkAnswer(input, blank, container) {
+    const userAnswer = input.value.trim().toLowerCase();
+    const correctAnswer = blank.original_word.toLowerCase();
     
-    // Watch for dynamically added elements
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === 1) { // Element node
-            const audioElements = node.querySelectorAll ? node.querySelectorAll('audio, .result-player, .saved-tracks .card') : [];
-            audioElements.forEach(element => {
-              element.addEventListener('mouseenter', () => {
-                this.addAnimation('hovering');
-              });
-              
-              element.addEventListener('mouseleave', () => {
-                if (!this.isPlaying) {
-                  this.removeAnimation();
-                }
-              });
-            });
-          }
-        });
-      });
-    });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
+    if (userAnswer === correctAnswer) {
+      // Correct answer
+      input.style.borderColor = '#10b981';
+      input.style.background = 'rgba(16, 185, 129, 0.1)';
+      input.disabled = true;
+      
+      // Add checkmark
+      const checkmark = document.createElement('span');
+      checkmark.textContent = ' ✓';
+      checkmark.style.cssText = `
+        color: #10b981;
+        font-weight: bold;
+        margin-left: 8px;
+      `;
+      container.appendChild(checkmark);
+      
+      // Update progress
+      if (!userAnswers[`${blank.line_index}-${blank.word_position}`].isCorrect) {
+        completedBlanks++;
+        userAnswers[`${blank.line_index}-${blank.word_position}`].isCorrect = true;
+        updateProgress();
+      }
+    } else if (userAnswer.length > 0) {
+      // Wrong answer
+      input.style.borderColor = '#ef4444';
+      input.style.background = 'rgba(239, 68, 68, 0.1)';
+    }
   }
   
-  addAudioListeners() {
-    document.addEventListener('play', (e) => {
-      if (e.target.tagName === 'AUDIO') {
-        this.isPlaying = true;
-        this.addAnimation('playing');
-      }
-    });
+  // Update progress
+  function updateProgress() {
+    progressText.textContent = `Practice Progress: ${completedBlanks}/${blanks.length} completed`;
+    progressFill.style.width = `${(completedBlanks / blanks.length) * 100}%`;
     
-    document.addEventListener('pause', (e) => {
-      if (e.target.tagName === 'AUDIO') {
-        this.isPlaying = false;
-        this.removeAnimation();
-      }
-    });
+    // Save progress to localStorage and MongoDB
+    if (track) {
+      savePracticeProgress(track, completedBlanks, blanks.length);
+    }
     
-    document.addEventListener('ended', (e) => {
-      if (e.target.tagName === 'AUDIO') {
-        this.isPlaying = false;
-        this.removeAnimation();
-      }
+    if (completedBlanks === blanks.length) {
+      progressText.textContent = '🎉 All blanks completed! Great job!';
+      progressText.style.color = '#10b981';
+    }
+  }
+  
+  container.appendChild(progressContainer);
+  container.appendChild(lyricsContainer);
+}
+
+function createRegularLyricsDisplay(lyrics, container) {
+  const originalLyrics = document.createElement('div');
+  originalLyrics.className = 'original-lyrics';
+  originalLyrics.style.cssText = `
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+  `;
+  
+  const title = document.createElement('h4');
+  title.textContent = 'Original Lyrics';
+  title.style.cssText = `
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+  `;
+  
+  const lyricsList = document.createElement('div');
+  lyricsList.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  `;
+  
+  lyrics.forEach((line, index) => {
+    if (line.trim()) {
+      const lineDiv = document.createElement('div');
+      lineDiv.style.cssText = `
+        font-size: 15px;
+        font-weight: 400;
+        color: #cccccc;
+        line-height: 1.5;
+        padding: 4px 0;
+      `;
+      lineDiv.innerHTML = line;
+      lyricsList.appendChild(lineDiv);
+    }
+  });
+  
+  originalLyrics.appendChild(title);
+  originalLyrics.appendChild(lyricsList);
+  container.appendChild(originalLyrics);
+}
+
+// Practice Section Functions
+function initPracticeSection() {
+  const practiceSection = document.getElementById('practice');
+  const practiceSongList = document.getElementById('practice-song-list');
+  const practiceEmpty = document.getElementById('practice-empty');
+  const practiceInterface = document.getElementById('practice-interface');
+  const practiceContent = document.getElementById('practice-content');
+  const backToSongsBtn = document.getElementById('back-to-songs');
+  const practiceSongTitle = document.getElementById('practice-song-title');
+  
+  if (!practiceSection) return;
+  
+  // Load and display practice songs
+  loadPracticeSongs();
+  
+  // Back button handler
+  if (backToSongsBtn) {
+    backToSongsBtn.addEventListener('click', () => {
+      practiceInterface.style.display = 'none';
+      document.querySelector('.practice-song-selector').style.display = 'block';
     });
+  }
+  
+  function loadPracticeSongs() {
+    const tracks = loadTracks();
+    const songsWithPractice = tracks.filter(track => track.practiced_lyrics && track.blanks);
+    
+    if (songsWithPractice.length === 0) {
+      practiceSongList.style.display = 'none';
+      practiceEmpty.style.display = 'block';
+      return;
+    }
+    
+    practiceSongList.style.display = 'grid';
+    practiceEmpty.style.display = 'none';
+    practiceSongList.innerHTML = '';
+    
+    songsWithPractice.forEach(track => {
+      const card = createPracticeSongCard(track);
+      practiceSongList.appendChild(card);
+    });
+  }
+  
+  function createPracticeSongCard(track) {
+    const card = document.createElement('div');
+    card.className = 'practice-song-card has-practice';
+    card.addEventListener('click', () => startPracticeSession(track));
+    
+    const completedBlanks = track.practice_progress ? 
+      track.practice_progress.completed_blanks || 0 : 0;
+    const totalBlanks = track.blanks ? track.blanks.length : 0;
+    const completionRate = totalBlanks > 0 ? Math.round((completedBlanks / totalBlanks) * 100) : 0;
+    
+    card.innerHTML = `
+      <h4>${track.title}</h4>
+      <p>${track.description}</p>
+      <div class="practice-song-meta">
+        <span>${track.topic}</span>
+        <span>${track.style}</span>
+      </div>
+      <div class="practice-song-stats">
+        <span>🎯 ${completedBlanks}/${totalBlanks} blanks</span>
+        <span>📊 ${completionRate}% complete</span>
+        <span>🎵 ${track.concepts ? track.concepts.length : 0} concepts</span>
+      </div>
+    `;
+    
+    return card;
+  }
+  
+  function startPracticeSession(track) {
+    document.querySelector('.practice-song-selector').style.display = 'none';
+    practiceInterface.style.display = 'block';
+    practiceSongTitle.textContent = track.title;
+    
+    // Create practice interface
+    practiceContent.innerHTML = '';
+    
+    // Add audio player
+    const audioPlayer = document.createElement('div');
+    audioPlayer.className = 'practice-audio-player';
+    audioPlayer.innerHTML = `
+      <h4>🎵 Listen & Practice</h4>
+      <audio controls style="width: 100%; margin-top: 12px;">
+        <source src="${track.audioUrl}" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+    `;
+    practiceContent.appendChild(audioPlayer);
+    
+    // Add practice interface
+    if (track.practiced_lyrics && track.blanks) {
+      createPracticeInterface(track.practiced_lyrics, track.blanks, practiceContent, track);
+    }
+  }
+  
+  // Expose loadPracticeSongs for external updates
+  window.loadPracticeSongs = loadPracticeSongs;
+}
+
+// Save practice progress to localStorage and MongoDB
+function savePracticeProgress(track, completedBlanks, totalBlanks) {
+  // Update localStorage
+  const tracks = loadTracks();
+  const trackIndex = tracks.findIndex(t => t.id === track.id);
+  
+  if (trackIndex !== -1) {
+    tracks[trackIndex].practice_progress = {
+      completed_blanks: completedBlanks,
+      total_blanks: totalBlanks,
+      completion_rate: Math.round((completedBlanks / totalBlanks) * 100),
+      last_practiced: new Date().toISOString()
+    };
+    
+    saveTracks(tracks);
+    
+    // Update MongoDB via API
+    savePracticeProgressToMongoDB(track.id, completedBlanks, totalBlanks);
   }
 }
 
-// Initialize custom cursor
-function initMusicCursor() {
-  musicCursor = new MusicCursor();
+// Save practice progress to MongoDB
+async function savePracticeProgressToMongoDB(trackId, completedBlanks, totalBlanks) {
+  try {
+    const response = await fetch('http://localhost:8000/api/practice-progress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        session_id: trackId,
+        completed_blanks: completedBlanks,
+        total_blanks: totalBlanks,
+        completion_rate: Math.round((completedBlanks / totalBlanks) * 100),
+        last_practiced: new Date().toISOString()
+      })
+    });
+    
+    if (response.ok) {
+      console.log('Practice progress saved to MongoDB');
+    } else {
+      console.error('Failed to save practice progress to MongoDB');
+    }
+  } catch (error) {
+    console.error('Error saving practice progress:', error);
+  }
 }
 

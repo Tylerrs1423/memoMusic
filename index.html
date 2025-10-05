@@ -4,21 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MemoMusic · Study With Sound</title>
-    <style>
-      *, *::before, *::after, html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, button, input, textarea, select, audio, video {
-        cursor: none !important;
-      }
-    </style>
-    <link rel="stylesheet" href="styles.css?v=6" />
+    <link rel="stylesheet" href="styles.css?v=14" />
   </head>
   <body>
-    <!-- Custom Animated Music Cursor -->
-    <div id="music-cursor" class="music-cursor">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 3V12.55C11.41 12.21 10.73 12 10 12C7.79 12 6 13.79 6 16S7.79 20 10 20 14 18.21 14 16V8H18V6H14V3H12Z" fill="currentColor"/>
-      </svg>
-    </div>
-    
     <div class="background-gradient" aria-hidden="true"></div>
     <div class="ribbons-layer" aria-hidden="true"></div>
     <div class="floating-icons" aria-hidden="true">
@@ -45,6 +33,7 @@
           <ul class="nav-list">
             <li><a href="#menu" class="nav-link" data-shiny data-shiny-speed="6">Menu</a></li>
             <li><a href="#create" class="nav-link" data-shiny data-shiny-speed="6">Create</a></li>
+            <li><a href="#practice" class="nav-link" data-shiny data-shiny-speed="6">Practice</a></li>
             <li><a href="#save" class="nav-link" data-shiny data-shiny-speed="6">Save Music</a></li>
             <li><a href="#about" class="nav-link" data-shiny data-shiny-speed="6">About</a></li>
           </ul>
@@ -64,14 +53,17 @@
             <div class="hero-slogan-bubble" role="presentation" tabindex="0">
               <span class="sr-only">Where memory meets melody.</span>
               <span
-                class="hero-slogan text-type"
-                data-type-text='["Where memory meets melody."]'
-                data-type-speed="50"
-                data-type-pause="2520"
-                data-type-deleting="30"
-                data-type-loop="true"
-                data-type-cursor="|"
-              ></span>
+                class="hero-slogan"
+                data-decrypted-text
+                data-decrypt-text="Where memory meets melody."
+                data-decrypt-speed="60"
+                data-decrypt-max="24"
+                data-decrypt-characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%?"
+                data-decrypt-animate="hover"
+                data-decrypt-direction="center"
+              >
+                Where memory meets melody.
+              </span>
             </div>
             <h1>Study tracks tailored to your notes, mood, and learning pace.</h1>
             <p>
@@ -362,6 +354,43 @@
           </div>
         </div>
       </section>
+
+      <section id="practice" class="section" tabindex="-1">
+        <div class="section-inner">
+          <header class="section-header">
+            <h2 class="section-title">Practice Mode</h2>
+            <p class="section-description">
+              Test your knowledge with interactive fill-in-the-blank exercises from your saved songs.
+            </p>
+          </header>
+          
+          <div class="practice-container">
+            <div class="practice-song-selector">
+              <h3>Choose a Song to Practice</h3>
+              <div id="practice-song-list" class="practice-song-grid">
+                <!-- Practice songs will be populated here -->
+              </div>
+              <div id="practice-empty" class="practice-empty-state">
+                <div class="empty-icon">🎵</div>
+                <h4>No songs to practice yet</h4>
+                <p>Create and save some songs first, then come back to practice with them!</p>
+                <a href="#create" class="btn primary">Create Your First Song</a>
+              </div>
+            </div>
+            
+            <div id="practice-interface" class="practice-interface" style="display: none;">
+              <div class="practice-header">
+                <button id="back-to-songs" class="btn ghost">← Back to Songs</button>
+                <h3 id="practice-song-title">Practice Session</h3>
+              </div>
+              <div id="practice-content">
+                <!-- Practice content will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="about" class="section about" tabindex="-1">
         <div class="section-shell">
           <header class="section-shell__header">

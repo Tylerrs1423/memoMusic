@@ -21,7 +21,12 @@ class Gemini(BaseModel):
 
 class Blank(BaseModel):
     line_index: int
-    answer: str
+    word_position: int  # Position of the blank word in the line
+    original_word: str  # The word that should be filled in
+    start_time: float = 0.0  # Start time in seconds for this word
+    end_time: float = 0.0  # End time in seconds for this word
+    is_correct: bool = False  # Whether user has answered correctly
+    user_answer: str = ""  # User's current answer
 
 class ParsedLyrics(BaseModel):
     lyrics: List[str]
