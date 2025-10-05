@@ -1,4 +1,6 @@
-import { initDecryptedText } from './decrypted-text.js';
+import { initTextType } from './text-type.js';
+import { initShinyText } from './shiny-text.js';
+import { initRibbons } from './ribbons.js';
 
 const sections = Array.from(document.querySelectorAll('.section'));
 const sectionIds = new Set(sections.map((section) => section.id));
@@ -28,6 +30,17 @@ const savedEmptyState = document.getElementById('saved-empty');
 
 const menuCursorLayer = document.querySelector('.menu-cursor-layer');
 const menuLink = document.querySelector('.nav-link[href="#menu"]');
+const menuExperiences = document.querySelector('.menu-experiences');
+const experienceButtons = Array.from(document.querySelectorAll('.experience-pill'));
+const experiencePreview = document.querySelector('.experience-preview');
+const experienceTitle = experiencePreview?.querySelector('[data-experience-title]');
+const experienceCopy = experiencePreview?.querySelector('[data-experience-copy]');
+const experienceTags = experiencePreview?.querySelector('[data-experience-tags]');
+const experienceBpm = experiencePreview?.querySelector('[data-experience-bpm]');
+const experienceAction = experiencePreview?.querySelector('[data-experience-action]');
+const pulseButton = experiencePreview?.querySelector('[data-pulse-button]');
+const sparklineBars = experiencePreview ? Array.from(experiencePreview.querySelectorAll('.experience-sparkline span')) : [];
+const pulseTimerDisplay = experiencePreview?.querySelector('[data-pulse-timer]');
 
 const STORAGE_KEYS = {
   tracks: 'memomusic-tracks',
@@ -47,6 +60,9 @@ let lastCursorPoint = null;
 let cursorPoints = [];
 let animateFn = null;
 let customTopic = '';
+let customStyle = '';
+let previewTimerInterval = null;
+let previewCountdown = 0;
 
 function fallbackAnimate(element, keyframes, options) {
   const animation = element.animate(keyframes, options);
@@ -71,30 +87,81 @@ async function initAnimationLibrary() {
   }
 }
 
-function handleHashChange() {
-  let hash = window.location.hash || '#menu';
-  if (!sectionIds.has(hash.replace('#', ''))) {
-    hash = '#menu';
-    window.history.replaceState(null, '', hash);
-  }
+function getSectionIdFromHash(hash) {
+  if (!hash) return null;
+  const normalized = hash.startsWith('#') ? hash.slice(1) : hash;
+  return sectionIds.has(normalized) ? normalized : null;
+}
 
-  sections.forEach((section) => {
-    const match = `#${section.id}` === hash;
-    section.hidden = !match;
-    section.classList.toggle('active', match);
-    if (match) {
-      window.requestAnimationFrame(() => section.focus({ preventScroll: false }));
-    }
-  });
-
+function setActiveNavLink(targetHash) {
   navLinks.forEach((link) => {
-    const match = link.getAttribute('href') === hash;
+    const match = link.getAttribute('href') === targetHash;
     link.setAttribute('aria-current', match ? 'page' : 'false');
   });
+}
 
-  header.classList.remove('open');
-  navToggle.setAttribute('aria-expanded', 'false');
-  navToggle.classList.remove('active');
+function focusSection(section) {
+  if (!section || !section.hasAttribute('tabindex')) return;
+  window.requestAnimationFrame(() => {
+    section.focus({ preventScroll: true });
+  });
+}
+
+function scrollSectionIntoView(section, behavior = 'smooth') {
+  if (!section) return;
+  const headerHeight = header?.offsetHeight ?? 0;
+  const targetOffset = section.getBoundingClientRect().top + window.scrollY - headerHeight - 24;
+  const top = Math.max(targetOffset, 0);
+  const scrollBehavior = behavior === 'auto' ? 'auto' : 'smooth';
+  window.scrollTo({ top, behavior: scrollBehavior });
+}
+
+function ensureSectionsAreVisible() {
+  sections.forEach((section) => {
+    if (section.hidden) {
+      section.hidden = false;
+    }
+  });
+}
+
+function activateSection(sectionId, { withScroll = true, behavior = 'smooth', updateHash = true } = {}) {
+  if (!sectionIds.has(sectionId)) return;
+
+  const targetHash = `#${sectionId}`;
+  const targetSection = document.getElementById(sectionId);
+  if (!targetSection) return;
+
+  ensureSectionsAreVisible();
+  sections.forEach((section) => {
+    section.classList.toggle('active', section.id === sectionId);
+  });
+  setActiveNavLink(targetHash);
+
+  if (updateHash && window.location.hash !== targetHash) {
+    const method = window.location.hash ? 'pushState' : 'replaceState';
+    window.history[method](null, '', targetHash);
+  }
+
+  if (withScroll) {
+    scrollSectionIntoView(targetSection, behavior);
+  }
+
+  focusSection(targetSection);
+
+  if (sectionId === 'menu') {
+    initTextType({ restart: true });
+  }
+
+  header?.classList.remove('open');
+  navToggle?.setAttribute('aria-expanded', 'false');
+  navToggle?.classList.remove('active');
+}
+
+function handleHashChange(event) {
+  const sectionId = getSectionIdFromHash(window.location.hash) || 'menu';
+  const isNavigationEvent = event?.type === 'hashchange' || event?.type === 'popstate';
+  const behavior = isNavigationEvent ? 'smooth' : 'auto';
+  activateSection(sectionId, { withScroll: true, behavior, updateHash: false });
 }
 
 function toggleNav() {
@@ -270,11 +337,13 @@ function setStyleInputState(value) {
     styleInput.setAttribute('aria-hidden', 'false');
     styleInput.placeholder = 'Describe your style';
     styleInput.required = true;
+    styleInput.value = customStyle;
     styleInput.focus();
   } else {
     styleInput.disabled = true;
     styleInput.setAttribute('aria-hidden', 'true');
     styleInput.placeholder = 'Style auto-filled from list';
+    customStyle = styleInput.value.trim();
     styleInput.value = '';
     styleInput.required = false;
   }
@@ -355,6 +424,186 @@ function resetMenuCursorTrail() {
   lastCursorPoint = null;
 }
 
+function formatCountdown(seconds) {
+  const safeSeconds = Math.max(0, Math.ceil(Number(seconds) || 0));
+  return `00:${String(safeSeconds).padStart(2, '0')}`;
+}
+
+function stopPreviewTimer() {
+  if (previewTimerInterval) {
+    window.clearInterval(previewTimerInterval);
+    previewTimerInterval = null;
+  }
+}
+
+function resetPreviewTimer(duration) {
+  const target = Number(duration) || 0;
+  stopPreviewTimer();
+  previewCountdown = target;
+  if (pulseTimerDisplay) {
+    pulseTimerDisplay.textContent = target ? formatCountdown(target) : '00:00';
+    pulseTimerDisplay.setAttribute('data-active', 'false');
+  }
+}
+
+function startPreviewTimer() {
+  if (!pulseButton || !pulseTimerDisplay) return;
+  const duration = Number(pulseButton.dataset.duration) || previewCountdown || 0;
+  if (!duration) {
+    resetPreviewTimer(duration);
+    return;
+  }
+  stopPreviewTimer();
+  previewCountdown = duration;
+  pulseTimerDisplay.textContent = formatCountdown(previewCountdown);
+  pulseTimerDisplay.setAttribute('data-active', 'true');
+  previewTimerInterval = window.setInterval(() => {
+    previewCountdown -= 1;
+    if (previewCountdown <= 0) {
+      pulseTimerDisplay.textContent = '00:00';
+      pulseTimerDisplay.setAttribute('data-active', 'false');
+      stopPreviewTimer();
+      return;
+    }
+    pulseTimerDisplay.textContent = formatCountdown(previewCountdown);
+  }, 1000);
+}
+
+function applyExperienceColors(button) {
+  if (!menuExperiences) return;
+  const colors = (button.dataset.colors || '').split(',').map((value) => value.trim()).filter(Boolean);
+  if (!colors.length) return;
+  const [primary, secondary] = colors;
+  menuExperiences.style.setProperty('--experience-accent', primary || 'var(--accent)');
+  menuExperiences.style.setProperty('--experience-accent-2', secondary || primary || 'var(--accent-2)');
+}
+
+function updateExperience(button) {
+  if (!button || !experiencePreview) return;
+
+  experienceButtons.forEach((pill) => {
+    const isActive = pill === button;
+    pill.classList.toggle('is-active', isActive);
+    pill.setAttribute('aria-selected', String(isActive));
+  });
+
+  const title = button.dataset.title || button.textContent.trim();
+  const description = button.dataset.copy || '';
+  const bpm = button.dataset.bpm || '';
+  const length = button.dataset.length || '';
+  const actionLabel = button.dataset.action || 'Load preset';
+  const tags = (button.dataset.tags || '').split('|').map((tag) => tag.trim()).filter(Boolean);
+
+  if (experienceTitle) {
+    experienceTitle.textContent = title;
+  }
+  if (experienceCopy) {
+    experienceCopy.textContent = description;
+  }
+  if (experienceBpm) {
+    experienceBpm.textContent = bpm;
+  }
+  if (experienceAction) {
+    experienceAction.textContent = actionLabel;
+    experienceAction.setAttribute('aria-label', `${actionLabel} – ${title}`);
+  }
+
+  if (experienceTags) {
+    experienceTags.innerHTML = '';
+    if (tags.length) {
+      tags.forEach((tag) => {
+        const item = document.createElement('li');
+        item.textContent = tag;
+        experienceTags.appendChild(item);
+      });
+    }
+  }
+
+  if (experiencePreview.dataset) {
+    experiencePreview.dataset.selected = button.dataset.experience || button.id || '';
+  }
+
+  const previewDuration = Number(button.dataset.previewDuration) || 0;
+  if (pulseButton) {
+    pulseButton.dataset.duration = String(previewDuration);
+  }
+  resetPreviewTimer(previewDuration);
+
+  applyExperienceColors(button);
+
+  sparklineBars.forEach((bar) => {
+    const duration = (1.6 + Math.random() * 1.2).toFixed(2);
+    bar.style.animationDuration = `${duration}s`;
+    bar.style.animationDelay = `${Math.random() * 0.6}s`;
+  });
+}
+
+function focusExperienceButton(index) {
+  if (!experienceButtons.length) return;
+  const targetIndex = (index + experienceButtons.length) % experienceButtons.length;
+  const button = experienceButtons[targetIndex];
+  button.focus();
+  updateExperience(button);
+}
+
+function handleExperienceKeyNav(event, index) {
+  switch (event.key) {
+    case 'ArrowRight':
+    case 'ArrowDown':
+      event.preventDefault();
+      focusExperienceButton(index + 1);
+      break;
+    case 'ArrowLeft':
+    case 'ArrowUp':
+      event.preventDefault();
+      focusExperienceButton(index - 1);
+      break;
+    case 'Home':
+      event.preventDefault();
+      focusExperienceButton(0);
+      break;
+    case 'End':
+      event.preventDefault();
+      focusExperienceButton(experienceButtons.length - 1);
+      break;
+    default:
+      break;
+  }
+}
+
+function triggerExperiencePulse() {
+  if (!pulseButton || !experiencePreview) return;
+  pulseButton.classList.add('is-pulsing');
+  experiencePreview.classList.add('is-pulsing');
+
+  sparklineBars.forEach((bar) => {
+    const duration = (1.4 + Math.random()).toFixed(2);
+    bar.style.animationDuration = `${duration}s`;
+  });
+
+  startPreviewTimer();
+
+  window.setTimeout(() => {
+    pulseButton.classList.remove('is-pulsing');
+    experiencePreview.classList.remove('is-pulsing');
+  }, 1100);
+}
+
+if (experienceButtons.length) {
+  const initialButton = experienceButtons.find((button) => button.classList.contains('is-active')) || experienceButtons[0];
+  updateExperience(initialButton);
+  experienceButtons.forEach((button, index) => {
+    button.addEventListener('click', () => updateExperience(button));
+    button.addEventListener('keydown', (event) => handleExperienceKeyNav(event, index));
+  });
+}
+
+if (pulseButton) {
+  pulseButton.addEventListener('click', () => {
+    triggerExperiencePulse();
+  });
+}
+
 createForm.addEventListener('submit', (event) => {
   event.preventDefault();
 
@@ -401,6 +650,12 @@ createForm.addEventListener('submit', (event) => {
       window.setTimeout(() => styleInput.classList.remove('input-error'), 900);
     }
     return;
+  }
+
+  if (selectedStyle === 'Other') {
+    customStyle = styleCustom;
+  } else {
+    customStyle = '';
   }
 
   const timestamp = new Date();
@@ -464,10 +719,18 @@ styleSelect?.addEventListener('change', (event) => {
 });
 
 navLinks.forEach((link) => {
-  link.addEventListener('click', () => {
-    header.classList.remove('open');
-    navToggle.setAttribute('aria-expanded', 'false');
-    navToggle.classList.remove('active');
+  link.addEventListener('click', (event) => {
+    const hash = link.getAttribute('href');
+    const sectionId = getSectionIdFromHash(hash);
+    if (!sectionId) {
+      header?.classList.remove('open');
+      navToggle?.setAttribute('aria-expanded', 'false');
+      navToggle?.classList.remove('active');
+      return;
+    }
+
+    event.preventDefault();
+    activateSection(sectionId, { withScroll: true, behavior: 'smooth', updateHash: true });
   });
 });
 
@@ -485,12 +748,16 @@ menuLink?.addEventListener('pointerenter', () => {
 menuLink?.addEventListener('pointerleave', resetMenuCursorTrail);
 
 window.addEventListener('hashchange', handleHashChange);
+window.addEventListener('popstate', handleHashChange);
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (!window.location.hash) {
-    window.location.hash = '#menu';
-  }
-  handleHashChange();
+  const initialSectionId = getSectionIdFromHash(window.location.hash) || 'menu';
+  const shouldUpdateHash = !window.location.hash;
+  activateSection(initialSectionId, {
+    withScroll: true,
+    behavior: 'auto',
+    updateHash: shouldUpdateHash
+  });
   renderConcepts();
   renderSavedTracks();
   if (topicSelect) {
@@ -499,8 +766,16 @@ window.addEventListener('DOMContentLoaded', () => {
   if (styleSelect) {
     setStyleInputState(styleSelect.value || '');
   }
-  initDecryptedText();
+  initTextType();
+  initShinyText();
   initAnimationLibrary();
+  initRibbons({
+    colors: ['#ffffff'],
+    baseThickness: 30,
+    speedMultiplier: 0.5,
+    maxAge: 500,
+    enableFade: false,
+    enableShaderEffect: true
+  });
 });
 
-window.addEventListener('load', handleHashChange);

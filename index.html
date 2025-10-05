@@ -8,6 +8,7 @@
   </head>
   <body>
     <div class="background-gradient" aria-hidden="true"></div>
+    <div class="ribbons-layer" aria-hidden="true"></div>
     <div class="floating-icons" aria-hidden="true">
       <span class="icon note">♪</span>
       <span class="icon book">📘</span>
@@ -17,23 +18,29 @@
       <span class="icon book">📗</span>
       <span class="icon note">♩</span>
       <span class="icon book">📖</span>
+      <span class="icon note">♯</span>
+      <span class="icon book">📕</span>
+      <span class="icon note">♭</span>
+      <span class="icon book">📒</span>
     </div>
     <header class="site-header">
-      <div class="brand">
-        <img src="logo.svg" alt="MemoMusic logo" class="brand-logo" />
-        <span class="brand-name">MemoMusic</span>
+      <div class="site-header__inner">
+        <div class="brand">
+          <img src="logo.svg" alt="MemoMusic logo" class="brand-logo" />
+          <span class="brand-name">MemoMusic</span>
+        </div>
+        <nav aria-label="Primary navigation">
+          <ul class="nav-list">
+            <li><a href="#menu" class="nav-link" data-shiny data-shiny-speed="6">Menu</a></li>
+            <li><a href="#create" class="nav-link" data-shiny data-shiny-speed="6">Create</a></li>
+            <li><a href="#save" class="nav-link" data-shiny data-shiny-speed="6">Save Music</a></li>
+            <li><a href="#about" class="nav-link" data-shiny data-shiny-speed="6">About</a></li>
+          </ul>
+        </nav>
+        <button class="nav-toggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
       </div>
-      <nav aria-label="Primary navigation">
-        <ul class="nav-list">
-          <li><a href="#menu" class="nav-link">Menu</a></li>
-          <li><a href="#create" class="nav-link">Create</a></li>
-          <li><a href="#save" class="nav-link">Save Music</a></li>
-          <li><a href="#about" class="nav-link">About</a></li>
-        </ul>
-      </nav>
-      <button class="nav-toggle" aria-label="Toggle navigation">
-        <span></span><span></span><span></span>
-      </button>
       <div class="menu-cursor-layer" aria-hidden="true"></div>
     </header>
 
@@ -42,21 +49,18 @@
         <div class="hero-inner">
           <div class="hero-copy">
             <p class="hero-tag">An AI tool that creates music to make memorization easier.</p>
-          <div class="hero-slogan-bubble" role="presentation" tabindex="0">
-            <span class="sr-only">Where memory meets melody.</span>
-            <span
-              class="hero-slogan"
-              data-decrypted-text
-              data-decrypt-text="Where memory meets melody."
-              data-decrypt-speed="60"
-              data-decrypt-max="24"
-              data-decrypt-characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%?"
-              data-decrypt-animate="hover"
-              data-decrypt-direction="center"
-            >
-              Where memory meets melody.
-            </span>
-          </div>
+            <div class="hero-slogan-bubble" role="presentation" tabindex="0">
+              <span class="sr-only">Where memory meets melody.</span>
+              <span
+                class="hero-slogan text-type"
+                data-type-text='["Where memory meets melody."]'
+                data-type-speed="50"
+                data-type-pause="2520"
+                data-type-deleting="30"
+                data-type-loop="true"
+                data-type-cursor="|"
+              ></span>
+            </div>
             <h1>Study tracks tailored to your notes, mood, and learning pace.</h1>
             <p>
               MemoMusic remixes your study material into focused soundscapes with mnemonic cues. Power through revision,
@@ -67,168 +71,381 @@
               <a class="btn ghost" href="#save">View Saved Music</a>
             </div>
           </div>
-          <div class="hero-visual" aria-hidden="true">
-            <img src="logo.svg" alt="" class="hero-logo" />
-            <div class="hero-bubbles">
-              <span>Focus Beats</span>
-              <span>Memory Hooks</span>
-              <span>AI Boost</span>
-            </div>
-          </div>
         </div>
         <div class="hero-features">
-          <div class="features-grid">
-            <article class="feature-card">
-              <h3>Smart Arrangement</h3>
-              <p>MemoMusic analyses your topics and structures tracks with recurring motifs so ideas stay top of mind.</p>
+          <div class="menu-experiences" role="region" aria-label="MemoMusic interactive menu">
+            <div class="menu-experiences__controls" role="tablist" aria-orientation="horizontal">
+              <button
+                type="button"
+                class="experience-pill is-active"
+                role="tab"
+                aria-selected="true"
+                aria-controls="experience-preview"
+                id="experience-tab-focus"
+                data-experience="focus"
+                data-title="Focus Flow"
+                data-copy="Warm analog textures keep you locked in while subtle mnemonic chimes track every key formula."
+                data-tags="Lo-Fi focus|Alpha wave boost|Formula chimes"
+                data-bpm="82 BPM"
+                data-length="25 min"
+                data-action="Load focus preset"
+                data-colors="#6366F1,#22D3EE"
+                data-preview-duration="6"
+              >
+                Focus Flow
+              </button>
+              <button
+                type="button"
+                class="experience-pill"
+                role="tab"
+                aria-selected="false"
+                aria-controls="experience-preview"
+                id="experience-tab-memory"
+                data-experience="memory"
+                data-title="Memory Sprint"
+                data-copy="Up-tempo percussion with vocal call-outs sparks fast recall drills for definitions and dates."
+                data-tags="Rap cadence|Call & response|Memory sprints"
+                data-bpm="104 BPM"
+                data-length="18 min"
+                data-action="Launch sprint session"
+                data-colors="#EC4899,#F97316"
+                data-preview-duration="5"
+              >
+                Memory Sprint
+              </button>
+              <button
+                type="button"
+                class="experience-pill"
+                role="tab"
+                aria-selected="false"
+                aria-controls="experience-preview"
+                id="experience-tab-chill"
+                data-experience="chill"
+                data-title="Chill Recall"
+                data-copy="Airy pads and gentle mallets give space for spaced repetition and vocab practice without stress."
+                data-tags="Ocean pads|Spaced repetition|Soft mallets"
+                data-bpm="72 BPM"
+                data-length="30 min"
+                data-action="Load chill preset"
+                data-colors="#14B8A6,#6366F1"
+                data-preview-duration="7"
+              >
+                Chill Recall
+              </button>
+            </div>
+            <article
+              class="experience-preview"
+              id="experience-preview"
+              role="tabpanel"
+              tabindex="0"
+              aria-live="polite"
+              data-selected="focus"
+            >
+              <header class="experience-preview__header">
+                <h3 data-experience-title>Focus Flow</h3>
+                <div class="experience-preview__meta">
+                  <span data-experience-bpm>82 BPM</span>
+                </div>
+              </header>
+              <p data-experience-copy>
+                Warm analog textures keep you locked in while subtle mnemonic chimes track every key formula.
+              </p>
+              <ul class="experience-preview__tags" data-experience-tags>
+                <li>Lo-Fi focus</li>
+                <li>Alpha wave boost</li>
+                <li>Formula chimes</li>
+              </ul>
+              <div class="experience-preview__actions">
+                <a class="btn primary" href="#create" data-experience-action>Load focus preset</a>
+                <button type="button" class="experience-preview__pulse" data-pulse-button>
+                  <span class="experience-preview__pulse-ring" aria-hidden="true"></span>
+                  Preview vibe
+                </button>
+                <span class="experience-preview__timer" data-pulse-timer aria-live="polite">00:06</span>
+              </div>
+              <div class="experience-sparkline" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
             </article>
-            <article class="feature-card">
-              <h3>Concept Spotlight</h3>
-              <p>Highlight formulas, definitions, or dates and we weave them into rhythm-based memory cues.</p>
-            </article>
-            <article class="feature-card">
-              <h3>Save & Remix</h3>
-              <p>Keep every memo mix, replay on demand, and tweak styles whenever you need a fresh vibe.</p>
-            </article>
+          </div>
+          <div class="hero-glances" role="list">
+            <a class="hero-glance" href="#create" role="listitem">
+              <span class="hero-glance__emoji" aria-hidden="true">🎧</span>
+              <div class="hero-glance__body">
+                <h4>Instant Focus</h4>
+                <p>Launch a lo-fi preset that weaves your key formulas into the beat 🎶</p>
+              </div>
+            </a>
+            <a class="hero-glance" href="#create" role="listitem">
+              <span class="hero-glance__emoji" aria-hidden="true">🎼</span>
+              <div class="hero-glance__body">
+                <h4>Guided Remix</h4>
+                <p>Try new moods, dial the energy live, and keep ideas flowing ✨</p>
+              </div>
+            </a>
+            <a class="hero-glance" href="#save" role="listitem">
+              <span class="hero-glance__emoji" aria-hidden="true">⭐</span>
+              <div class="hero-glance__body">
+                <h4>Memo Library</h4>
+                <p>Save favourite sessions and replay them whenever you need 📚</p>
+              </div>
+            </a>
           </div>
         </div>
       </section>
 
       <section id="create" class="section create" tabindex="-1">
-        <header class="section-header">
-          <h2>Compose a memo mix in seconds</h2>
-          <p>Drop your notes, pick a style, and MemoMusic will whip up a preview track ready to save.</p>
-        </header>
-        <form id="create-form" class="card form" novalidate>
-          <div class="field-group">
-            <label class="field">
-              <span>Topic</span>
-              <div class="select-with-input topic-select">
-                <select id="topic-select" name="topicSelect" required>
-                  <option value="">Choose a topic</option>
-                  <option value="Mathematics">Mathematics</option>
-                  <option value="Biology">Biology</option>
-                  <option value="History">History</option>
-                  <option value="Physics">Physics</option>
-                  <option value="Languages">Languages</option>
-                  <option value="Computer Science">Computer Science</option>
-                  <option value="Economics">Economics</option>
-                  <option value="Other">Other…</option>
-                </select>
-                <input
-                  type="text"
-                  id="topic-input"
-                  name="topicInput"
-                  class="topic-input"
-                  placeholder="Describe your topic"
-                  aria-hidden="true"
-                  disabled
-                />
-              </div>
-            </label>
-            <label class="field">
-              <span>Style</span>
-              <div class="select-with-input style-select">
-                <select id="style-select" name="style" required>
-                  <option value="">Select style</option>
-                  <option value="Lo-Fi Chill">Lo-Fi Chill</option>
-                  <option value="Jazz Study">Jazz Study</option>
-                  <option value="Uptempo Rap">Uptempo Rap</option>
-                  <option value="Deep House">Deep House</option>
-                  <option value="Synthwave Glow">Synthwave Glow</option>
-                  <option value="Classical Focus">Classical Focus</option>
-                  <option value="Ambient Nature">Ambient Nature</option>
-                  <option value="Other">Other…</option>
-                </select>
-                <input
-                  type="text"
-                  id="style-input"
-                  name="styleInput"
-                  class="style-input"
-                  placeholder="Share your vibe"
-                  aria-hidden="true"
-                  disabled
-                />
-              </div>
-            </label>
-          </div>
-          <div class="field">
-            <span>Concepts</span>
-            <div class="concept-input">
-              <input
-                type="text"
-                id="conceptInput"
-                name="conceptInput"
-                placeholder="Add a concept or keyword (e.g., derivatives, Mendel genetics, grammar tips)"
-                autocomplete="off"
-              />
-              <button type="button" id="addConcept" class="icon-button" aria-label="Add concept">+</button>
+        <div class="section-shell">
+          <header class="section-shell__header">
+            <span class="section-shell__tag">Create</span>
+            <h2>Compose a memo mix in seconds</h2>
+            <p>Drop your notes, pick a style, and MemoMusic will whip up a preview track ready to save.</p>
+          </header>
+          <div class="section-shell__content section-shell__content--split">
+            <div class="section-shell__column section-shell__column--info">
+              <ul class="section-points">
+                <li>
+                  <span class="section-point__icon" aria-hidden="true">🪄</span>
+                  <div>
+                    <h3>Adaptive loops</h3>
+                    <p>MemoMusic syncs motifs with your outline so key ideas repeat just enough.</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="section-point__icon" aria-hidden="true">🎚️</span>
+                  <div>
+                    <h3>Style switching</h3>
+                    <p>Preview multiple vibes instantly and settle on the energy that suits tonight’s study sprint.</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="section-point__icon" aria-hidden="true">⚡</span>
+                  <div>
+                    <h3>Smart cues</h3>
+                    <p>Concept tags become rhythmic shouts, whispered mnemonics, or melodic flourishes.</p>
+                  </div>
+                </li>
+              </ul>
             </div>
-            <ul class="concept-list" id="conceptList" aria-live="polite"></ul>
+            <div class="section-shell__column section-shell__column--main">
+              <form id="create-form" class="card form stage-card" novalidate>
+                <div class="field-group">
+                  <label class="field">
+                    <span>Topic</span>
+                    <div class="select-with-input topic-select">
+                      <select id="topic-select" name="topicSelect" required>
+                        <option value="">Choose a topic</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Biology">Biology</option>
+                        <option value="History">History</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Languages">Languages</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Economics">Economics</option>
+                        <option value="Other">Other…</option>
+                      </select>
+                      <input
+                        type="text"
+                        id="topic-input"
+                        name="topicInput"
+                        class="topic-input"
+                        placeholder="Describe your topic"
+                        aria-hidden="true"
+                        disabled
+                      />
+                    </div>
+                  </label>
+                  <label class="field">
+                    <span>Style</span>
+                    <div class="select-with-input style-select">
+                      <select id="style-select" name="style" required>
+                        <option value="">Select style</option>
+                        <option value="Lo-Fi Chill">Lo-Fi Chill</option>
+                        <option value="Jazz Study">Jazz Study</option>
+                        <option value="Uptempo Rap">Uptempo Rap</option>
+                        <option value="Deep House">Deep House</option>
+                        <option value="Synthwave Glow">Synthwave Glow</option>
+                        <option value="Classical Focus">Classical Focus</option>
+                        <option value="Ambient Nature">Ambient Nature</option>
+                        <option value="Other">Other…</option>
+                      </select>
+                      <input
+                        type="text"
+                        id="style-input"
+                        name="styleInput"
+                        class="style-input"
+                        placeholder="Share your vibe"
+                        aria-hidden="true"
+                        disabled
+                      />
+                    </div>
+                  </label>
+                </div>
+                <div class="field">
+                  <span>Concepts</span>
+                  <div class="concept-input">
+                    <input
+                      type="text"
+                      id="conceptInput"
+                      name="conceptInput"
+                      placeholder="Add a concept or keyword (e.g., derivatives, Mendel genetics, grammar tips)"
+                      autocomplete="off"
+                    />
+                    <button type="button" id="addConcept" class="icon-button" aria-label="Add concept">+</button>
+                  </div>
+                  <ul class="concept-list" id="conceptList" aria-live="polite"></ul>
+                </div>
+                <label class="field">
+                  <span>Notes (optional)</span>
+                  <textarea
+                    id="notes-input"
+                    name="notes"
+                    rows="4"
+                    placeholder="Key terms, formulas, bullet points…"
+                  ></textarea>
+                </label>
+                <button type="submit" class="btn primary generate-btn">Generate memo mix</button>
+              </form>
+              <aside id="generate-result" class="card result stage-card" hidden>
+                <div class="result-info">
+                  <h3 id="result-title">Memo Mix Preview</h3>
+                  <p id="result-description"></p>
+                  <button type="button" id="save-track-btn" class="btn secondary">Save to library</button>
+                </div>
+                <div class="result-player">
+                  <audio id="preview-audio" controls preload="none">
+                    <source src="https://cdn.pixabay.com/download/audio/2022/03/16/audio_ee04b25c65.mp3?filename=ambient-future-synth-110140.mp3" type="audio/mpeg" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </aside>
+            </div>
           </div>
-          <label class="field">
-            <span>Notes (optional)</span>
-            <textarea
-              id="notes-input"
-              name="notes"
-              rows="4"
-              placeholder="Key terms, formulas, bullet points…"
-            ></textarea>
-          </label>
-          <button type="submit" class="btn primary generate-btn">Generate memo mix</button>
-        </form>
-        <aside id="generate-result" class="card result" hidden>
-          <div class="result-info">
-            <h3 id="result-title">Memo Mix Preview</h3>
-            <p id="result-description"></p>
-            <button type="button" id="save-track-btn" class="btn secondary">Save to library</button>
-          </div>
-          <div class="result-player">
-            <audio id="preview-audio" controls preload="none">
-              <source src="https://cdn.pixabay.com/download/audio/2022/03/16/audio_ee04b25c65.mp3?filename=ambient-future-synth-110140.mp3" type="audio/mpeg" />
-              Your browser does not support the audio element.
-            </audio>
-          </div>
-        </aside>
+        </div>
       </section>
 
       <section id="save" class="section saved" tabindex="-1">
-        <header class="section-header">
-          <h2>Your saved memo tracks</h2>
-          <p>Replay a mix, adjust notes, or remove it when it is no longer needed.</p>
-        </header>
-        <div id="saved-list" class="saved-grid" role="list"></div>
-        <p id="saved-empty" class="empty-state" hidden>
-          No saved tracks yet — generate one from the Create tab and save it here.
-        </p>
+        <div class="section-shell">
+          <header class="section-shell__header">
+            <span class="section-shell__tag">Library</span>
+            <h2>Your saved memo tracks</h2>
+            <p>Replay a mix, adjust notes, or remove it when it is no longer needed.</p>
+            <div class="section-shell__badge-row" aria-hidden="true">
+              <span class="badge-chip">🔁 Auto-sync storage</span>
+              <span class="badge-chip">🎧 Instant playback</span>
+              <span class="badge-chip">✨ Remix anytime</span>
+            </div>
+          </header>
+          <div class="section-shell__content section-shell__content--split section-shell__content--library">
+            <div class="section-shell__column section-shell__column--main">
+              <div class="stage-card saved-collection">
+                <div class="saved-toolbar" aria-hidden="true">
+                  <span class="saved-toolbar__label">Collections</span>
+                  <div class="saved-toolbar__chips">
+                    <span class="badge-chip">Lo-Fi</span>
+                    <span class="badge-chip">Focus</span>
+                    <span class="badge-chip">Night Mode</span>
+                  </div>
+                </div>
+                <div id="saved-list" class="saved-grid" role="list"></div>
+                <p id="saved-empty" class="empty-state" hidden>
+                  No saved tracks yet — generate one from the Create tab and save it here.
+                </p>
+              </div>
+            </div>
+            <div class="section-shell__column section-shell__column--info">
+              <ul class="section-points section-points--compact">
+                <li>
+                  <span class="section-point__icon" aria-hidden="true">💾</span>
+                  <div>
+                    <h3>Offline by default</h3>
+                    <p>Your mixes stay in local storage, ready to replay even on airplane Wi-Fi.</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="section-point__icon" aria-hidden="true">🧭</span>
+                  <div>
+                    <h3>Tag & regroup</h3>
+                    <p>Use concept cues to remember why you built a track and bring it back instantly.</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="section-point__icon" aria-hidden="true">📤</span>
+                  <div>
+                    <h3>Share-ready</h3>
+                    <p>Export audio snippets or just let friends scan your screen for the queue.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </section>
       <section id="about" class="section about" tabindex="-1">
-        <header class="section-header">
-          <h2>How MemoMusic works</h2>
-          <p>AI-crafted audio companions that make revision stick.</p>
-        </header>
-        <div class="about-grid">
-          <article class="card">
-            <h3>AI meets study science</h3>
-            <p>
-              MemoMusic analyses your keywords and themes, then maps them to melodic patterns, tempo shifts, and vocal cues
-              designed to reinforce memory.
-            </p>
-          </article>
-          <article class="card">
-            <h3>Privacy-first</h3>
-            <p>
-              Everything stays in your browser. We never upload your notes or recordings — it is all simulated locally for
-              rapid creative feedback.
-            </p>
-          </article>
-          <article class="card">
-            <h3>RUHACK 2025 Project</h3>
-            <p>
-              MemoMusic was created by Louis Kuo and Tyler Smith for RUHACK 2025. Questions or jam ideas? Contact us at
-              <a href="mailto:hello@memomusic.ai">hello@memomusic.ai</a>.
-            </p>
-          </article>
+        <div class="section-shell">
+          <header class="section-shell__header">
+            <span class="section-shell__tag">About</span>
+            <h2>How MemoMusic works</h2>
+            <p>AI-crafted audio companions that make revision stick.</p>
+          </header>
+          <div class="section-shell__content section-shell__content--split section-shell__content--about">
+            <div class="section-shell__column section-shell__column--main">
+              <div class="stage-card about-overview">
+                <h3>Study smarter in three layers</h3>
+                <ol class="about-timeline">
+                  <li>
+                    <span class="about-timeline__step">01</span>
+                    <div>
+                      <h4>Capture context</h4>
+                      <p>Paste your notes or tag core concepts — MemoMusic analyses them to map topics and emphasis.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span class="about-timeline__step">02</span>
+                    <div>
+                      <h4>Compose a mix</h4>
+                      <p>The engine pairs loops, percussion, and mnemonic vocals that mirror your learning pace.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span class="about-timeline__step">03</span>
+                    <div>
+                      <h4>Reinforce memory</h4>
+                      <p>Replay whenever you revise. Subtle recall cues and spaced repetition keep details sticky.</p>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+            </div>
+            <div class="section-shell__column section-shell__column--info">
+              <div class="section-shell__grid about-pillars">
+                <article class="stage-card about-pillar">
+                  <span class="about-pillar__icon" aria-hidden="true">🧠</span>
+                  <h3>AI meets study science</h3>
+                  <p>
+                    MemoMusic analyses your keywords and themes, then maps them to melodic patterns, tempo shifts, and vocal cues
+                    designed to reinforce memory.
+                  </p>
+                </article>
+                <article class="stage-card about-pillar">
+                  <span class="about-pillar__icon" aria-hidden="true">🔐</span>
+                  <h3>Privacy-first</h3>
+                  <p>
+                    Everything stays in your browser. We never upload your notes or recordings — it is all simulated locally for
+                    rapid creative feedback.
+                  </p>
+                </article>
+                <article class="stage-card about-pillar">
+                  <span class="about-pillar__icon" aria-hidden="true">🚀</span>
+                  <h3>RUHACK 2025 project</h3>
+                  <p>
+                    MemoMusic was created by Louis Kuo and Tyler Smith for RUHACK 2025. Questions or jam ideas?
+                    <a href="mailto:hello@memomusic.ai">Say hello</a>.
+                  </p>
+                </article>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
