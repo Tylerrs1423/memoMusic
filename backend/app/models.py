@@ -32,8 +32,10 @@ class ElevenUrl(BaseModel):
 
 class Session(BaseModel):
     session_id: str
+    subject: str  # Added missing field
     concepts: List[str]
     music_genre: str
+    notes: str  # Added missing field
     lyrics: List[str]
     practiced_lyrics: List[str]
     blanks: List[Blank]
