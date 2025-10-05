@@ -50,6 +50,13 @@ const STORAGE_KEYS = {
   concepts: 'memomusic-concepts'
 };
 
+// Demo mode - map dropdown selections to specific MongoDB sessions
+const DEMO_SESSION_MAP = {
+  'Computer Science': 'bee9c77c-f762-4224-98f1-ee3c7d996372', // Rap style - Stack song
+  'Biology': 'a31bbfb6-4c03-4634-ac5a-39e5c2176ff6', // Pop style - Photosynthesis song  
+  'Physics': 'e193f5d7-8e4b-4fb9-a6d1-5744c70f0774' // R&B style - Gravity song
+};
+
 const MENU_CURSOR_CONFIG = {
   spacing: 55,
   maxPoints: 12,
@@ -795,6 +802,160 @@ if (createForm) {
     ? styleCustom || 'Custom style'
     : styleSelect.options[styleSelect.selectedIndex]?.text || selectedStyle;
 
+  // Check if this is a demo topic that maps to a pre-saved session
+  const demoSessionId = DEMO_SESSION_MAP[displayTopic];
+  if (demoSessionId) {
+    console.log(`🎬 Demo mode: Loading ${displayTopic} session`);
+    
+    // Show loading state and hide form
+    generateResult.hidden = false;
+    if (createForm) {
+      createForm.style.display = 'none'; // Hide the form
+      generateResult.classList.add('full-width'); // Make results full width
+      
+      // Change grid to single column layout
+      const sectionContent = document.querySelector('.section-shell__content--split');
+      if (sectionContent) {
+        sectionContent.style.gridTemplateColumns = '1fr';
+      }
+    }
+    resultTitle.textContent = 'Generating your educational song...';
+    resultDescription.textContent = 'Creating lyrics and music with AI...';
+    saveTrackBtn.disabled = true;
+    saveTrackBtn.textContent = 'Generating...';
+    
+    // Simulate AI generation time (10+ seconds)
+    setTimeout(() => {
+      // Load session data from MongoDB via API
+      fetch(`http://localhost:8000/api/session/${demoSessionId}`)
+        .then(response => response.json())
+        .then(sessionData => {
+        console.log('Loaded demo session:', sessionData);
+        
+        // Create the same format as generated songs
+        const timestamp = new Date();
+        const title = `${sessionData.music_genre || 'Pop'} memo mix`;
+        const description = `Learn about ${sessionData.subject}`;
+        
+        currentDraft = {
+          id: Date.now(),
+          session_id: demoSessionId,
+          title,
+          description,
+          topic: sessionData.subject,
+          notes: sessionData.notes || '',
+          style: sessionData.music_genre || 'Pop',
+          concepts: sessionData.concepts || [],
+          audioUrl: `http://localhost:8000/api/audio/${demoSessionId}`,
+          lyrics: sessionData.lyrics,
+          practiced_lyrics: sessionData.practiced_lyrics,
+          blanks: sessionData.blanks,
+          createdAt: timestamp.toISOString()
+        };
+        
+        // Display the loaded song
+        resultTitle.textContent = `${title} — ${sessionData.subject}`;
+        resultDescription.textContent = description;
+        
+        // Update the existing preview audio element with demo audio
+        if (previewAudio) {
+          const audioSource = previewAudio.querySelector('source');
+          if (audioSource) {
+            audioSource.src = currentDraft.audioUrl;
+            previewAudio.load();
+            console.log('🎵 Updated preview audio with demo src:', currentDraft.audioUrl);
+          }
+        }
+        
+        // Add lyrics display
+        if (sessionData.lyrics && sessionData.lyrics.length > 0) {
+          const lyricsSection = document.createElement('div');
+          lyricsSection.style.cssText = `
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px auto;
+            max-width: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+          `;
+          
+          const lyricsTitle = document.createElement('h3');
+          lyricsTitle.textContent = '🎵 Song Lyrics';
+          lyricsTitle.style.cssText = `
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 16px 0;
+            text-align: center;
+          `;
+          
+          const lyricsContent = document.createElement('div');
+          lyricsContent.style.cssText = `
+            color: #e0e0e0;
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: center;
+          `;
+          
+          sessionData.lyrics.forEach((line, index) => {
+            const lineDiv = document.createElement('div');
+            lineDiv.textContent = line;
+            lineDiv.style.cssText = `
+              margin: 8px 0;
+              font-weight: 500;
+            `;
+            lyricsContent.appendChild(lineDiv);
+          });
+          
+          lyricsSection.appendChild(lyricsTitle);
+          lyricsSection.appendChild(lyricsContent);
+          resultDescription.appendChild(lyricsSection);
+        }
+        
+        // Create practice interface if blanks exist
+        if (sessionData.practiced_lyrics && sessionData.blanks && sessionData.blanks.length > 0) {
+          const practiceTitle = document.createElement('h3');
+          practiceTitle.textContent = '🎯 Fill-in-the-Blank Practice';
+          practiceTitle.style.cssText = `
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 20px 0 16px 0;
+            text-align: center;
+          `;
+          
+          const practiceContainer = document.createElement('div');
+          practiceContainer.style.cssText = `
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px auto;
+            max-width: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+          `;
+          
+          // Create practice interface using the updated preview audio
+          createPracticeInterface(sessionData.practiced_lyrics, sessionData.blanks, practiceContainer, currentDraft, previewAudio);
+          
+          resultDescription.appendChild(practiceTitle);
+          resultDescription.appendChild(practiceContainer);
+        }
+        
+          saveTrackBtn.disabled = false;
+          saveTrackBtn.textContent = 'Save to library';
+        })
+        .catch(error => {
+          console.error('Failed to load demo session:', error);
+          resultTitle.textContent = 'Error loading demo song';
+          resultDescription.textContent = 'Failed to load pre-saved content';
+          saveTrackBtn.disabled = false;
+          saveTrackBtn.textContent = 'Try Again';
+        });
+    }, 3000); // 3 second delay to simulate AI generation
+    
+    return; // Exit early, don't make real API call
+  }
+
   if (topicSelect.value === 'Other') {
     customTopic = topicValue;
   }
@@ -842,8 +1003,18 @@ if (createForm) {
     customStyle = '';
   }
 
-  // Show loading state
+  // Show loading state and hide form
   generateResult.hidden = false;
+  if (createForm) {
+    createForm.style.display = 'none'; // Hide the form
+    generateResult.classList.add('full-width'); // Make results full width
+    
+    // Change grid to single column layout
+    const sectionContent = document.querySelector('.section-shell__content--split');
+    if (sectionContent) {
+      sectionContent.style.gridTemplateColumns = '1fr';
+    }
+  }
   resultTitle.textContent = 'Generating your educational song...';
   resultDescription.textContent = 'Creating lyrics and music with AI...';
   saveTrackBtn.disabled = true;
@@ -1534,32 +1705,24 @@ class AudioPracticeController {
     this.currentBlankDisplay.appendChild(this.startPracticeButton);
     this.currentBlankDisplay.appendChild(this.inputContainer);
     
-    // Create lyrics display (for reference)
+    // Create progressive lyrics display
     this.lyricsContainer = document.createElement('div');
     this.lyricsContainer.style.cssText = `
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 15px;
-      background: rgba(255, 255, 255, 0.02);
-      border-radius: 8px;
-      font-size: 14px;
-      color: #cccccc;
-      max-height: 200px;
-      overflow-y: auto;
+      gap: 12px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      font-size: 16px;
+      color: #ffffff;
+      text-align: center;
+      margin-top: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     `;
     
-    this.practicedLyrics.forEach((line, index) => {
-      if (line.trim()) {
-        const lineDiv = document.createElement('div');
-        lineDiv.textContent = line;
-        lineDiv.style.cssText = `
-          padding: 4px 0;
-          line-height: 1.4;
-        `;
-        this.lyricsContainer.appendChild(lineDiv);
-      }
-    });
+    // Create progressive lyrics - only show up to current blank
+    this.updateProgressiveLyrics();
     
     this.container.appendChild(this.progressContainer);
     this.container.appendChild(this.currentBlankDisplay);
@@ -1691,6 +1854,7 @@ class AudioPracticeController {
       this.handlePracticeComplete();
     } else {
       this.updateCurrentBlank();
+      this.updateProgressiveLyrics(); // Show next lyrics line
       this.playAudio();
     }
     
@@ -1726,9 +1890,36 @@ class AudioPracticeController {
     this.progressText.textContent = `Practice Progress: ${this.completedBlanks}/${this.blanks.length} completed`;
     this.progressFill.style.width = `${(this.completedBlanks / this.blanks.length) * 100}%`;
     
+    // Update progressive lyrics
+    this.updateProgressiveLyrics();
+    
     // Save progress
     if (this.track) {
       savePracticeProgress(this.track, this.completedBlanks, this.blanks.length);
+    }
+  }
+  
+  updateProgressiveLyrics() {
+    // Clear existing lyrics
+    this.lyricsContainer.innerHTML = '';
+    
+    // Show lyrics up to the current blank line
+    const currentBlank = this.blanks[this.currentBlankIndex];
+    const maxLineToShow = currentBlank ? currentBlank.line_index : this.practicedLyrics.length - 1;
+    
+    for (let i = 0; i <= maxLineToShow && i < this.practicedLyrics.length; i++) {
+      const line = this.practicedLyrics[i];
+      if (line.trim()) {
+        const lineDiv = document.createElement('div');
+        lineDiv.textContent = line;
+        lineDiv.style.cssText = `
+          padding: 8px 0;
+          line-height: 1.5;
+          font-weight: 500;
+          opacity: ${i === maxLineToShow ? '0.7' : '1'};
+        `;
+        this.lyricsContainer.appendChild(lineDiv);
+      }
     }
   }
   
@@ -1775,16 +1966,19 @@ class AudioPracticeController {
 }
 
 // Practice Interface Functions
-function createPracticeInterface(practicedLyrics, blanks, container, track = null) {
+function createPracticeInterface(practicedLyrics, blanks, container, track = null, audioElement = null) {
   console.log('Creating audio-synchronized practice interface with', blanks.length, 'blanks');
   
-  // Find the audio element - look in multiple places
-  let audioElement = null;
-  
-  // First try to find it in the container's parent
-  if (container && container.parentElement) {
-    audioElement = container.parentElement.querySelector('audio');
+  // Use provided audio element or find it
+  if (!audioElement) {
+    // Find the audio element - look in multiple places
+    // First try to find it in the container's parent
+    if (container && container.parentElement) {
+      audioElement = container.parentElement.querySelector('audio');
+    }
   }
+  
+  console.log('Audio element found:', !!audioElement, audioElement?.src);
   
   // If not found, try to find it in the document
   if (!audioElement) {

@@ -4,6 +4,52 @@ import json
 import random
 import whisper
 from backend.app.config import GEMINI_API_KEY, ELEVENLABS_API_KEY
+
+# Pre-written scripts for better ElevenLabs output
+DEMO_SCRIPTS = {
+    'Computer Science': {
+        'subject': 'Computer Science',
+        'lyrics': [
+            "A stack is like a plate, the last one in is first out",
+            "You push things on the top, then pop them without a doubt",
+            "Last one in, first one out, that's how the stack will play",
+            "It keeps your data ordered, every single day",
+            "Push new things up high, pop the ones that came last",
+            "Perfect for undo actions or tracking through your past",
+            "Stacks keep things simple, with order you can trust",
+            "Helping programs run smooth, precise and robust"
+        ],
+        'concepts': ['stack', 'last one in first one out', 'push', 'pop']
+    },
+    'Biology': {
+        'subject': 'Biology',
+        'lyrics': [
+            "Plants are amazing, they make their own food",
+            "Through photosynthesis, nature's own mood",
+            "Chlorophyll captures the sunlight so bright",
+            "Converting energy, making life right",
+            "Carbon dioxide and water combine",
+            "With sunlight's power, creating the vine",
+            "Oxygen is released for us to breathe",
+            "While glucose provides energy to achieve"
+        ],
+        'concepts': ['photosynthesis', 'chlorophyll', 'glucose', 'oxygen']
+    },
+    'Physics': {
+        'subject': 'Physics',
+        'lyrics': [
+            "Gravity pulls us down to the ground",
+            "A force that's always all around",
+            "Mass and distance determine the strength",
+            "Newton's law explains it at length",
+            "Objects fall at the same rate",
+            "Heavy or light, it's all the same fate",
+            "Without gravity we'd float away",
+            "It keeps our feet on Earth each day"
+        ],
+        'concepts': ['gravity', 'force', 'mass', 'Newton']
+    }
+}
 from backend.app.models import Blank
 
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -361,7 +407,15 @@ def create_blanks_with_timestamps(blanks_info: list, whisper_result: dict) -> li
 def generate_educational_song(subject: str, concepts: list, music_genre: str = "pop", grade_level: str = "high school") -> dict:
     """Complete pipeline: generate lyrics, select blanks, compose music, and create practice materials"""
     print("🎵 Generating lyrics...")
-    lyrics = generate_lyrics(subject, concepts, music_genre, grade_level)
+    
+    # Check if we should use a pre-written demo script for better ElevenLabs output
+    if subject in DEMO_SCRIPTS:
+        print(f"📝 Using pre-written script for {subject}")
+        demo_data = DEMO_SCRIPTS[subject]
+        lyrics = demo_data['lyrics']
+        concepts = demo_data['concepts']
+    else:
+        lyrics = generate_lyrics(subject, concepts, music_genre, grade_level)
     
     print("🧠 Selecting key words for blanks with Gemini...")
     # Select blanks FIRST so we know which words to emphasize

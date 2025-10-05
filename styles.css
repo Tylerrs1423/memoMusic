@@ -402,10 +402,31 @@ main {
 .stage-card.form {
   background: rgba(15, 23, 42, 0.38);
   background: color-mix(in srgb, var(--card) 72%, transparent);
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.section-shell__column--main {
+  display: flex;
+  justify-content: center;
+}
+
+/* When form is hidden, make results take full width */
+.section-shell__column--main:has(.stage-card[style*="display: none"]) .result.stage-card {
+  max-width: 800px;
+  width: 100%;
 }
 
 .result.stage-card {
   margin-top: 1.4rem;
+}
+
+/* Full width results when form is hidden */
+.result.stage-card.full-width {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .section-shell__content--library .stage-card {

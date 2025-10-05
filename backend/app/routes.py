@@ -56,7 +56,7 @@ def start_session(frontend: Frontend):
     }
 
 
-@router.get("/api/audio/{session_id}")
+@router.get("/api/audio-stream/{session_id}")
 def stream_audio(session_id: str):
     """Stream audio from session in MongoDB"""
     session_doc = db.sessions.find_one({"session_id": session_id})
@@ -118,4 +118,63 @@ def get_practice_progress(session_id: str):
         "completion_rate": 0,
         "last_practiced": None
     })
+
+
+@router.get("/api/session/{session_id}")
+def get_session_data(session_id: str):
+    """Get complete session data for demo mode"""
+    session_doc = db.sessions.find_one({"session_id": session_id})
+    
+    if not session_doc:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Convert ObjectId to string
+    if "_id" in session_doc:
+        session_doc["_id"] = str(session_doc["_id"])
+    
+    # Keep audio_data but don't include it in JSON response
+    # Audio will be streamed separately via /api/audio/{session_id}
+    if "audio_data" in session_doc:
+        session_doc.pop("audio_data", None)
+    
+    return session_doc
+
+
+@router.get("/api/audio/{session_id}")
+def get_audio_file(session_id: str):
+    """Get audio file for a session - either from MongoDB or generate fresh from ElevenLabs"""
+    session_doc = db.sessions.find_one({"session_id": session_id})
+    
+    if not session_doc:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Check if we have audio_data in MongoDB
+    if session_doc.get("audio_data"):
+        # Return cached audio from MongoDB
+        from fastapi.responses import Response
+        return Response(
+            content=session_doc["audio_data"],
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": f"attachment; filename=audio_{session_id}.mp3"}
+        )
+    else:
+        # Generate fresh audio from ElevenLabs using the lyrics
+        from backend.app.services import create_composition_plan, compose_music
+        
+        lyrics = session_doc.get("lyrics", [])
+        music_genre = session_doc.get("music_genre", "pop")
+        
+        if not lyrics:
+            raise HTTPException(status_code=404, detail="No lyrics found")
+        
+        # Create plan and generate audio
+        plan = create_composition_plan(lyrics, music_genre)
+        audio_data = compose_music(plan)
+        
+        from fastapi.responses import Response
+        return Response(
+            content=audio_data,
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": f"attachment; filename=audio_{session_id}.mp3"}
+        )
 
