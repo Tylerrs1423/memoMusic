@@ -1774,12 +1774,9 @@ textarea:focus {
   margin: clamp(1.2rem, 3vw, 2.2rem) 0;
   padding: clamp(1.1rem, 3.2vw, 1.8rem) clamp(1.6rem, 4.2vw, 2.6rem);
   border-radius: 26px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(37, 99, 235, 0.12)), rgba(15, 23, 42, 0.28);
-  background:
-    linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(37, 99, 235, 0.12)),
-    color-mix(in srgb, var(--card) 65%, transparent);
-  box-shadow: 0 28px 46px rgba(5, 12, 32, 0.32);
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(37, 99, 235, 0.12));
+  box-shadow: 0 28px 48px rgba(8, 12, 32, 0.45);
   overflow: hidden;
   cursor: pointer;
   isolation: isolate;

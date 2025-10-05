@@ -9,10 +9,22 @@ const header = document.querySelector('.site-header');
 const navToggle = document.querySelector('.nav-toggle');
 navToggle.setAttribute('aria-expanded', 'false');
 
-// These will be initialized in DOMContentLoaded
-let createForm, topicInput, styleSelect, styleInput, generateResult, resultTitle, resultDescription;
-let saveTrackBtn, previewAudio, conceptInput, addConceptButton, conceptListElement;
-let topicSelect, notesInput, gradeLevelSelect;
+const createForm = document.getElementById('create-form');
+const topicInput = document.getElementById('topic-input');
+const styleSelect = document.getElementById('style-select');
+const styleInput = document.getElementById('style-input');
+const generateResult = document.getElementById('generate-result');
+const resultTitle = document.getElementById('result-title');
+const resultDescription = document.getElementById('result-description');
+const saveTrackBtn = document.getElementById('save-track-btn');
+const previewAudio = document.getElementById('preview-audio');
+
+const conceptInput = document.getElementById('conceptInput');
+const addConceptButton = document.getElementById('addConcept');
+const conceptListElement = document.getElementById('conceptList');
+const topicSelect = document.getElementById('topic-select');
+const notesInput = document.getElementById('notes-input');
+const gradeLevelSelect = document.getElementById('grade-level-select');
 
 const savedList = document.getElementById('saved-list');
 const savedEmptyState = document.getElementById('saved-empty');
@@ -1173,22 +1185,6 @@ window.addEventListener('hashchange', handleHashChange);
 window.addEventListener('popstate', handleHashChange);
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Initialize all form elements first
-  createForm = document.getElementById('create-form');
-  topicInput = document.getElementById('topic-input');
-  styleSelect = document.getElementById('style-select');
-  styleInput = document.getElementById('style-input');
-  generateResult = document.getElementById('generate-result');
-  resultTitle = document.getElementById('result-title');
-  resultDescription = document.getElementById('result-description');
-  saveTrackBtn = document.getElementById('save-track-btn');
-  previewAudio = document.getElementById('preview-audio');
-  conceptInput = document.getElementById('conceptInput');
-  addConceptButton = document.getElementById('addConcept');
-  conceptListElement = document.getElementById('conceptList');
-  topicSelect = document.getElementById('topic-select');
-  notesInput = document.getElementById('notes-input');
-  gradeLevelSelect = document.getElementById('grade-level-select');
   
   console.log('Form elements initialized:', {
     createForm: !!createForm,
