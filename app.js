@@ -7,7 +7,9 @@ const sectionIds = new Set(sections.map((section) => section.id));
 const navLinks = Array.from(document.querySelectorAll('.nav-link'));
 const header = document.querySelector('.site-header');
 const navToggle = document.querySelector('.nav-toggle');
-navToggle.setAttribute('aria-expanded', 'false');
+if (navToggle) {
+  navToggle.setAttribute('aria-expanded', 'false');
+}
 
 const createForm = document.getElementById('create-form');
 const topicInput = document.getElementById('topic-input');
@@ -79,13 +81,9 @@ function fallbackAnimate(element, keyframes, options) {
 }
 
 async function initAnimationLibrary() {
-  try {
-    const motionModule = await import('https://cdn.jsdelivr.net/npm/motion@10/dist/motion.mjs');
-    animateFn = motionModule.animate;
-  } catch (error) {
-    console.warn('Motion import failed, using fallback animation.', error);
-    animateFn = fallbackAnimate;
-  }
+  // Skip external motion library - use fallback only
+  console.log('Using fallback animation library');
+  animateFn = fallbackAnimate;
 }
 
 function getSectionIdFromHash(hash) {
@@ -166,6 +164,7 @@ function handleHashChange(event) {
 }
 
 function toggleNav() {
+  if (!header || !navToggle) return;
   const isOpen = header.classList.toggle('open');
   navToggle.setAttribute('aria-expanded', String(isOpen));
   navToggle.classList.toggle('active', isOpen);
@@ -774,8 +773,15 @@ if (pulseButton) {
   });
 }
 
-createForm.addEventListener('submit', (event) => {
+if (createForm) {
+  createForm.addEventListener('submit', (event) => {
   event.preventDefault();
+
+  // Check if required form elements exist
+  if (!topicSelect || !topicInput || !styleSelect || !gradeLevelSelect) {
+    console.error('Required form elements not found');
+    return;
+  }
 
   const selectedTopic = topicSelect.value;
   const topicValue = topicInput.value.trim();
@@ -871,8 +877,12 @@ createForm.addEventListener('submit', (event) => {
   const title = `${displayStyle} memo mix`;
   const description = summarizeNotes(notesValue || topicValue || displayTopic);
 
+  // Extract session_id from audio_url
+  const sessionId = data.audio_url.split('/').pop();
+  
   currentDraft = {
     id: Date.now(),
+    session_id: sessionId, // Store session_id for MongoDB operations
     title,
     description,
     topic: displayTopic,
@@ -914,8 +924,11 @@ createForm.addEventListener('submit', (event) => {
       
       // Create practice lyrics with input fields
       if (data.practiced_lyrics && data.blanks) {
+        console.log('Creating practice interface with blanks:', data.blanks);
+        console.log('First blank details:', data.blanks[0]);
         createPracticeInterface(data.practiced_lyrics, data.blanks, practiceContainer);
       } else {
+        console.log('No blanks data available:', { practiced_lyrics: !!data.practiced_lyrics, blanks: !!data.blanks });
         // Fallback to regular lyrics display
         createRegularLyricsDisplay(data.lyrics, practiceContainer);
       }
@@ -935,6 +948,10 @@ createForm.addEventListener('submit', (event) => {
       `;
       
       toggleButton.addEventListener('click', () => {
+        if (!practiceContainer) {
+          console.error('practiceContainer is null!');
+          return;
+        }
         const isShowingOriginal = practiceContainer.querySelector('.original-lyrics');
         if (isShowingOriginal) {
           isShowingOriginal.remove();
@@ -945,12 +962,19 @@ createForm.addEventListener('submit', (event) => {
         }
       });
       
-      resultDescription.appendChild(lyricsTitle);
-      resultDescription.appendChild(practiceContainer);
-      resultDescription.appendChild(toggleButton);
+      if (resultDescription) {
+        resultDescription.appendChild(lyricsTitle);
+        resultDescription.appendChild(practiceContainer);
+        resultDescription.appendChild(toggleButton);
+      }
     }
 
     // Create custom audio player
+    if (!previewAudio) {
+      console.error('previewAudio element not found');
+      return;
+    }
+    
     const audioSource = previewAudio.querySelector('source');
     if (audioSource) {
       const audioUrl = `http://localhost:8000${data.audio_url}`;
@@ -961,9 +985,11 @@ createForm.addEventListener('submit', (event) => {
       previewAudio.controls = false;
       
       // Remove existing custom player if any
-      const existingPlayer = resultDescription.querySelector('.custom-audio-player');
-      if (existingPlayer) {
-        existingPlayer.remove();
+      if (resultDescription) {
+        const existingPlayer = resultDescription.querySelector('.custom-audio-player');
+        if (existingPlayer) {
+          existingPlayer.remove();
+        }
       }
       
       // Create custom audio player container - match app style
@@ -1049,7 +1075,9 @@ createForm.addEventListener('submit', (event) => {
       playerContainer.appendChild(timeDisplay);
       
       // Add player to the result description
-      resultDescription.appendChild(playerContainer);
+      if (resultDescription) {
+        resultDescription.appendChild(playerContainer);
+      }
       
       // Audio control logic
       let isPlaying = false;
@@ -1106,14 +1134,22 @@ createForm.addEventListener('submit', (event) => {
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     
-    resultTitle.textContent = 'Error generating song';
-    resultDescription.textContent = `There was a problem creating your educational song. Error: ${error.message}`;
-    saveTrackBtn.disabled = false;
-    saveTrackBtn.textContent = 'Try Again';
+    if (resultTitle) {
+      resultTitle.textContent = 'Error generating song';
+    }
+    if (resultDescription) {
+      resultDescription.textContent = `There was a problem creating your educational song. Error: ${error.message}`;
+    }
+    if (saveTrackBtn) {
+      saveTrackBtn.disabled = false;
+      saveTrackBtn.textContent = 'Try Again';
+    }
   });
 });
+}
 
-saveTrackBtn.addEventListener('click', () => {
+if (saveTrackBtn) {
+  saveTrackBtn.addEventListener('click', () => {
   if (!currentDraft) {
     return;
   }
@@ -1129,15 +1165,20 @@ saveTrackBtn.addEventListener('click', () => {
   saveTrackBtn.disabled = true;
   saveTrackBtn.textContent = 'Saved';
 });
+}
 
-addConceptButton.addEventListener('click', handleAddConcept);
+if (addConceptButton) {
+  addConceptButton.addEventListener('click', handleAddConcept);
+}
 
-conceptInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    handleAddConcept();
-  }
-});
+if (conceptInput) {
+  conceptInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleAddConcept();
+    }
+  });
+}
 
 topicSelect?.addEventListener('change', (event) => {
   const value = event.target.value;
@@ -1168,7 +1209,9 @@ navLinks.forEach((link) => {
   });
 });
 
-navToggle.addEventListener('click', toggleNav);
+if (navToggle) {
+  navToggle.addEventListener('click', toggleNav);
+}
 
 menuLink?.addEventListener('pointermove', handleMenuPointerMove);
 menuLink?.addEventListener('pointerenter', () => {
@@ -1307,203 +1350,464 @@ function initScrollNavigation() {
   });
 }
 
-// Practice Interface Functions
-function createPracticeInterface(practicedLyrics, blanks, container, track = null) {
-  console.log('Creating practice interface with', blanks.length, 'blanks');
-  
-  // Create progress indicator
-  const progressContainer = document.createElement('div');
-  progressContainer.style.cssText = `
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-  `;
-  
-  const progressText = document.createElement('span');
-  progressText.textContent = 'Practice Progress: 0/4 completed';
-  progressText.style.cssText = `
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 500;
-  `;
-  
-  const progressBar = document.createElement('div');
-  progressBar.style.cssText = `
-    width: 200px;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-    overflow: hidden;
-  `;
-  
-  const progressFill = document.createElement('div');
-  progressFill.style.cssText = `
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #6366f1, #8b5cf6);
-    transition: width 0.3s ease;
-  `;
-  
-  progressBar.appendChild(progressFill);
-  progressContainer.appendChild(progressText);
-  progressContainer.appendChild(progressBar);
-  
-  // Create lyrics with input fields
-  const lyricsContainer = document.createElement('div');
-  lyricsContainer.style.cssText = `
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  `;
-  
-  // Track user answers
-  const userAnswers = {};
-  let completedBlanks = 0;
-  
-  practicedLyrics.forEach((line, lineIndex) => {
-    if (line.trim()) {
-      const lineContainer = document.createElement('div');
-      lineContainer.style.cssText = `
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-        padding: 12px;
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 8px;
-        font-size: 16px;
-        line-height: 1.6;
-        color: #ffffff;
-      `;
-      
-      // Split line into words and handle blanks
-      const words = line.split(' ');
-      words.forEach((word, wordIndex) => {
-        if (word === '___') {
-          // Find the blank for this position
-          const blank = blanks.find(b => b.line_index === lineIndex && b.word_position === wordIndex);
-          
-          if (blank) {
-            const inputContainer = document.createElement('span');
-            inputContainer.style.cssText = `
-              position: relative;
-              display: inline-block;
-            `;
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Type answer...';
-            input.style.cssText = `
-              background: rgba(255, 255, 255, 0.1);
-              border: 2px solid rgba(255, 255, 255, 0.2);
-              border-radius: 6px;
-              padding: 8px 12px;
-              color: #ffffff;
-              font-size: 16px;
-              min-width: 120px;
-              text-align: center;
-              transition: all 0.3s ease;
-            `;
-            
-            // Add focus/blur styling
-            input.addEventListener('focus', () => {
-              input.style.borderColor = '#6366f1';
-              input.style.background = 'rgba(255, 255, 255, 0.15)';
-            });
-            
-            input.addEventListener('blur', () => {
-              input.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-              input.style.background = 'rgba(255, 255, 255, 0.1)';
-            });
-            
-            // Handle answer submission
-            input.addEventListener('keypress', (e) => {
-              if (e.key === 'Enter') {
-                checkAnswer(input, blank, inputContainer);
-              }
-            });
-            
-            input.addEventListener('blur', () => {
-              checkAnswer(input, blank, inputContainer);
-            });
-            
-            inputContainer.appendChild(input);
-            lineContainer.appendChild(inputContainer);
-            
-            // Store reference for progress tracking
-            userAnswers[`${lineIndex}-${wordIndex}`] = { input, blank, container: inputContainer, isCorrect: false };
-          }
-        } else {
-          // Regular word
-          const wordSpan = document.createElement('span');
-          wordSpan.textContent = word;
-          wordSpan.style.cssText = `
-            color: #cccccc;
-          `;
-          lineContainer.appendChild(wordSpan);
-        }
-      });
-      
-      lyricsContainer.appendChild(lineContainer);
+// Audio-Synchronized Practice Controller
+class AudioPracticeController {
+  constructor(practicedLyrics, blanks, container, track, audioElement) {
+    this.practicedLyrics = practicedLyrics;
+    
+    // Debug: Log the raw blanks data first
+    console.log('Raw blanks data received:', blanks);
+    console.log('Blanks type:', typeof blanks, 'Length:', blanks?.length);
+    
+    if (!blanks || !Array.isArray(blanks)) {
+      console.error('Invalid blanks data:', blanks);
+      return;
     }
-  });
+    
+    // Blanks should already be sorted by start_time from backend, but ensure it
+    this.blanks = blanks.sort((a, b) => a.start_time - b.start_time);
+    
+    // Debug: Log the blanks in chronological order
+    console.log('Blanks in chronological order:');
+    this.blanks.forEach((blank, index) => {
+      console.log(`  ${index + 1}. "${blank.original_word}" at ${blank.start_time}s (line ${blank.line_index}, word ${blank.word_position})`);
+    });
+    
+    this.container = container;
+    this.track = track;
+    this.audio = audioElement;
+    this.currentBlankIndex = 0;
+    this.userAnswers = {};
+    this.completedBlanks = 0;
+    this.isPlaying = false;
+    this.isWaitingForInput = false;
+    
+    this.init();
+  }
   
-  // Check answer function
-  function checkAnswer(input, blank, container) {
-    const userAnswer = input.value.trim().toLowerCase();
-    const correctAnswer = blank.original_word.toLowerCase();
+  init() {
+    this.createUI();
+    this.setupAudioListeners();
+    this.startPractice();
+  }
+  
+  createUI() {
+    // Clear container
+    this.container.innerHTML = '';
+    
+    // Create progress indicator
+    this.progressContainer = document.createElement('div');
+    this.progressContainer.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    `;
+    
+    this.progressText = document.createElement('span');
+    this.progressText.textContent = 'Practice Progress: 0/4 completed';
+    this.progressText.style.cssText = `
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 500;
+    `;
+    
+    this.progressBar = document.createElement('div');
+    this.progressBar.style.cssText = `
+      width: 200px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    `;
+    
+    this.progressFill = document.createElement('div');
+    this.progressFill.style.cssText = `
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      transition: width 0.3s ease;
+    `;
+    
+    this.progressBar.appendChild(this.progressFill);
+    this.progressContainer.appendChild(this.progressText);
+    this.progressContainer.appendChild(this.progressBar);
+    
+    // Create current blank display
+    this.currentBlankDisplay = document.createElement('div');
+    this.currentBlankDisplay.style.cssText = `
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+    `;
+    
+    this.currentBlankText = document.createElement('h3');
+    this.currentBlankText.style.cssText = `
+      color: #ffffff;
+      margin: 0 0 15px 0;
+      font-size: 18px;
+    `;
+    
+    // Create start practice button
+    this.startPracticeButton = document.createElement('button');
+    this.startPracticeButton.textContent = '🎵 Start Practice';
+    this.startPracticeButton.style.cssText = `
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    `;
+    
+    this.inputContainer = document.createElement('div');
+    this.inputContainer.style.cssText = `
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    `;
+    
+    this.currentInput = document.createElement('input');
+    this.currentInput.type = 'text';
+    this.currentInput.placeholder = 'Type your answer...';
+    this.currentInput.style.cssText = `
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #ffffff;
+      font-size: 16px;
+      min-width: 200px;
+      text-align: center;
+      transition: all 0.3s ease;
+    `;
+    
+    this.submitButton = document.createElement('button');
+    this.submitButton.textContent = 'Submit Answer';
+    this.submitButton.style.cssText = `
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    
+    this.continueButton = document.createElement('button');
+    this.continueButton.textContent = 'Continue';
+    this.continueButton.style.cssText = `
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      display: none;
+    `;
+    
+    this.feedbackText = document.createElement('div');
+    this.feedbackText.style.cssText = `
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 500;
+    `;
+    
+    this.inputContainer.appendChild(this.currentInput);
+    this.inputContainer.appendChild(this.submitButton);
+    this.inputContainer.appendChild(this.continueButton);
+    this.inputContainer.appendChild(this.feedbackText);
+    
+    this.currentBlankDisplay.appendChild(this.currentBlankText);
+    this.currentBlankDisplay.appendChild(this.startPracticeButton);
+    this.currentBlankDisplay.appendChild(this.inputContainer);
+    
+    // Create lyrics display (for reference)
+    this.lyricsContainer = document.createElement('div');
+    this.lyricsContainer.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      font-size: 14px;
+      color: #cccccc;
+      max-height: 200px;
+      overflow-y: auto;
+    `;
+    
+    this.practicedLyrics.forEach((line, index) => {
+      if (line.trim()) {
+        const lineDiv = document.createElement('div');
+        lineDiv.textContent = line;
+        lineDiv.style.cssText = `
+          padding: 4px 0;
+          line-height: 1.4;
+        `;
+        this.lyricsContainer.appendChild(lineDiv);
+      }
+    });
+    
+    this.container.appendChild(this.progressContainer);
+    this.container.appendChild(this.currentBlankDisplay);
+    this.container.appendChild(this.lyricsContainer);
+    
+    // Add event listeners
+    this.startPracticeButton.addEventListener('click', () => this.beginPractice());
+    this.submitButton.addEventListener('click', () => this.checkAnswer());
+    this.continueButton.addEventListener('click', () => this.continueToNextBlank());
+    this.currentInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') this.checkAnswer();
+    });
+  }
+  
+  setupAudioListeners() {
+    this.audio.addEventListener('timeupdate', () => {
+      this.handleTimeUpdate();
+    });
+    
+    this.audio.addEventListener('ended', () => {
+      this.handleSongEnd();
+    });
+  }
+  
+  startPractice() {
+    this.updateCurrentBlank();
+    // Don't auto-play - wait for user to click start
+  }
+  
+  beginPractice() {
+    console.log('🎵 Starting practice mode');
+    this.startPracticeButton.style.display = 'none';
+    this.inputContainer.style.display = 'flex';
+    this.updateCurrentBlank();
+    this.playAudio();
+  }
+  
+  playAudio() {
+    if (this.currentBlankIndex < this.blanks.length) {
+      // Start from beginning if this is the first blank, otherwise continue from where we left off
+      if (this.currentBlankIndex === 0) {
+        this.audio.currentTime = 0;
+      }
+      this.audio.play();
+      this.isPlaying = true;
+      this.isWaitingForInput = false;
+    }
+  }
+  
+  pauseAudio() {
+    this.audio.pause();
+    this.isPlaying = false;
+  }
+  
+  handleTimeUpdate() {
+    if (this.isWaitingForInput || !this.isPlaying) return;
+    
+    const currentBlank = this.blanks[this.currentBlankIndex];
+    if (!currentBlank) return;
+    
+    const pauseTime = currentBlank.start_time - 0.2;
+    
+    // Debug: Log timing info for first few seconds
+    if (this.currentBlankIndex === 0 && this.audio.currentTime < 2) {
+      console.log(`🎵 Audio: ${this.audio.currentTime.toFixed(2)}s | Next blank "${currentBlank.original_word}" at ${pauseTime.toFixed(2)}s`);
+    }
+    
+    // Pause 0.2 seconds before the blank word starts
+    if (this.audio.currentTime >= pauseTime) {
+      console.log(`⏸️ Pausing at ${this.audio.currentTime.toFixed(2)}s for blank "${currentBlank.original_word}" (word ${this.currentBlankIndex + 1}/${this.blanks.length})`);
+      console.log(`Expected to pause for: "${currentBlank.original_word}" but paused before "a plan"`);
+      this.pauseAudio();
+      this.isWaitingForInput = true;
+      this.showInputForCurrentBlank();
+    }
+  }
+  
+  showInputForCurrentBlank() {
+    const currentBlank = this.blanks[this.currentBlankIndex];
+    console.log(`🎯 Showing input for blank "${currentBlank.original_word}"`);
+    
+    this.currentBlankText.textContent = `Fill in the blank (${this.currentBlankIndex + 1}/${this.blanks.length})`;
+    this.currentInput.value = '';
+    this.currentInput.focus();
+    this.feedbackText.textContent = '';
+    this.feedbackText.style.color = '#ffffff';
+    this.submitButton.style.display = 'block';
+    this.continueButton.style.display = 'none';
+    this.currentInput.disabled = false;
+    
+    // Make sure input container is visible
+    this.inputContainer.style.display = 'flex';
+    this.inputContainer.style.visibility = 'visible';
+    this.inputContainer.style.opacity = '1';
+    console.log('Input container should be visible now');
+    console.log('Input container display style:', this.inputContainer.style.display);
+    console.log('Input container computed style:', window.getComputedStyle(this.inputContainer).display);
+    
+    // Force a reflow to ensure styles are applied
+    this.inputContainer.offsetHeight;
+  }
+  
+  checkAnswer() {
+    const currentBlank = this.blanks[this.currentBlankIndex];
+    const userAnswer = this.currentInput.value.trim().toLowerCase();
+    const correctAnswer = currentBlank.original_word.toLowerCase();
     
     if (userAnswer === correctAnswer) {
       // Correct answer
-      input.style.borderColor = '#10b981';
-      input.style.background = 'rgba(16, 185, 129, 0.1)';
-      input.disabled = true;
-      
-      // Add checkmark
-      const checkmark = document.createElement('span');
-      checkmark.textContent = ' ✓';
-      checkmark.style.cssText = `
-        color: #10b981;
-        font-weight: bold;
-        margin-left: 8px;
-      `;
-      container.appendChild(checkmark);
-      
-      // Update progress
-      if (!userAnswers[`${blank.line_index}-${blank.word_position}`].isCorrect) {
-        completedBlanks++;
-        userAnswers[`${blank.line_index}-${blank.word_position}`].isCorrect = true;
-        updateProgress();
-      }
-    } else if (userAnswer.length > 0) {
+      this.feedbackText.textContent = '✅ Correct!';
+      this.feedbackText.style.color = '#10b981';
+      this.completedBlanks++;
+      this.updateProgress();
+    } else {
       // Wrong answer
-      input.style.borderColor = '#ef4444';
-      input.style.background = 'rgba(239, 68, 68, 0.1)';
+      this.feedbackText.textContent = `❌ Incorrect. The correct answer is: "${currentBlank.original_word}"`;
+      this.feedbackText.style.color = '#ef4444';
+    }
+    
+    this.submitButton.style.display = 'none';
+    this.continueButton.style.display = 'block';
+    this.currentInput.disabled = true;
+  }
+  
+  continueToNextBlank() {
+    this.currentBlankIndex++;
+    
+    if (this.currentBlankIndex >= this.blanks.length) {
+      this.handlePracticeComplete();
+    } else {
+      this.updateCurrentBlank();
+      this.playAudio();
+    }
+    
+    this.currentInput.disabled = false;
+  }
+  
+  updateCurrentBlank() {
+    if (this.currentBlankIndex < this.blanks.length) {
+      const currentBlank = this.blanks[this.currentBlankIndex];
+      
+      if (this.currentBlankIndex === 0 && !this.isWaitingForInput) {
+        // Initial state - show start button
+        this.currentBlankText.textContent = `Ready to practice ${this.blanks.length} blanks!`;
+        this.startPracticeButton.style.display = 'block';
+        this.inputContainer.style.display = 'none';
+      } else {
+        // During practice - show current blank info
+        this.currentBlankText.textContent = `Blank ${this.currentBlankIndex + 1}/${this.blanks.length}`;
+        this.startPracticeButton.style.display = 'none';
+        // Don't hide input container if we're waiting for input
+        if (!this.isWaitingForInput) {
+          this.inputContainer.style.display = 'flex';
+        }
+      }
+      
+      this.submitButton.style.display = 'none';
+      this.continueButton.style.display = 'none';
+      this.feedbackText.textContent = '';
     }
   }
   
-  // Update progress
-  function updateProgress() {
-    progressText.textContent = `Practice Progress: ${completedBlanks}/${blanks.length} completed`;
-    progressFill.style.width = `${(completedBlanks / blanks.length) * 100}%`;
+  updateProgress() {
+    this.progressText.textContent = `Practice Progress: ${this.completedBlanks}/${this.blanks.length} completed`;
+    this.progressFill.style.width = `${(this.completedBlanks / this.blanks.length) * 100}%`;
     
-    // Save progress to localStorage and MongoDB
-    if (track) {
-      savePracticeProgress(track, completedBlanks, blanks.length);
-    }
-    
-    if (completedBlanks === blanks.length) {
-      progressText.textContent = '🎉 All blanks completed! Great job!';
-      progressText.style.color = '#10b981';
+    // Save progress
+    if (this.track) {
+      savePracticeProgress(this.track, this.completedBlanks, this.blanks.length);
     }
   }
   
-  container.appendChild(progressContainer);
-  container.appendChild(lyricsContainer);
+  handlePracticeComplete() {
+    this.currentBlankText.textContent = '🎉 Practice Complete!';
+    this.inputContainer.innerHTML = `
+      <div style="color: #10b981; font-size: 16px; font-weight: 500;">
+        Great job! You completed ${this.completedBlanks}/${this.blanks.length} blanks correctly.
+      </div>
+      <button id="restart-practice" style="
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-top: 15px;
+      ">Practice Again</button>
+    `;
+    
+    document.getElementById('restart-practice').addEventListener('click', () => {
+      this.restart();
+    });
+    
+    this.progressText.textContent = '🎉 All blanks completed! Great job!';
+    this.progressText.style.color = '#10b981';
+  }
+  
+  handleSongEnd() {
+    if (this.currentBlankIndex < this.blanks.length) {
+      // Song ended but we still have blanks - continue to next
+      this.continueToNextBlank();
+    }
+  }
+  
+  restart() {
+    this.currentBlankIndex = 0;
+    this.completedBlanks = 0;
+    this.userAnswers = {};
+    this.createUI();
+    this.startPractice();
+  }
+}
+
+// Practice Interface Functions
+function createPracticeInterface(practicedLyrics, blanks, container, track = null) {
+  console.log('Creating audio-synchronized practice interface with', blanks.length, 'blanks');
+  
+  // Find the audio element - look in multiple places
+  let audioElement = null;
+  
+  // First try to find it in the container's parent
+  if (container && container.parentElement) {
+    audioElement = container.parentElement.querySelector('audio');
+  }
+  
+  // If not found, try to find it in the document
+  if (!audioElement) {
+    audioElement = document.querySelector('#preview-audio');
+  }
+  
+  // If still not found, try to find any audio element in the result area
+  if (!audioElement && container && container.parentElement) {
+    const resultArea = container.closest('.result-description, #result-description');
+    if (resultArea) {
+      audioElement = resultArea.querySelector('audio');
+    }
+  }
+  
+  if (!audioElement) {
+    console.error('No audio element found for practice');
+    return;
+  }
+  
+  console.log('Found audio element for practice:', audioElement);
+  
+  // Create the audio-synchronized practice controller
+  new AudioPracticeController(practicedLyrics, blanks, container, track, audioElement);
 }
 
 function createRegularLyricsDisplay(lyrics, container) {
@@ -1668,32 +1972,38 @@ function savePracticeProgress(track, completedBlanks, totalBlanks) {
     
     saveTracks(tracks);
     
-    // Update MongoDB via API
-    savePracticeProgressToMongoDB(track.id, completedBlanks, totalBlanks);
+    // Update MongoDB via API using session_id
+    savePracticeProgressToMongoDB(track.session_id, completedBlanks, totalBlanks);
   }
 }
 
 // Save practice progress to MongoDB
-async function savePracticeProgressToMongoDB(trackId, completedBlanks, totalBlanks) {
+async function savePracticeProgressToMongoDB(sessionId, completedBlanks, totalBlanks) {
   try {
+    // Skip MongoDB save for local tracks (they don't have session_id)
+    if (!sessionId || typeof sessionId === 'number') {
+      console.log('Skipping MongoDB save for local track');
+      return;
+    }
+    
     const response = await fetch('http://localhost:8000/api/practice-progress', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        session_id: trackId,
+        session_id: sessionId,
         completed_blanks: completedBlanks,
         total_blanks: totalBlanks,
         completion_rate: Math.round((completedBlanks / totalBlanks) * 100),
         last_practiced: new Date().toISOString()
       })
     });
-    
+
     if (response.ok) {
       console.log('Practice progress saved to MongoDB');
     } else {
-      console.error('Failed to save practice progress to MongoDB');
+      console.error('Failed to save practice progress to MongoDB:', response.status, response.statusText);
     }
   } catch (error) {
     console.error('Error saving practice progress:', error);

@@ -147,19 +147,12 @@ def transcribe_audio_with_timestamps(audio_data: bytes, lyrics: list) -> dict:
         model = get_whisper_model()
         result = model.transcribe(temp_file_path, word_timestamps=True)
         
-        # Debug: Print what Whisper actually returned
-        print(f"🔍 Whisper result type: {type(result)}")
-        print(f"🔍 Whisper result keys: {result.keys() if isinstance(result, dict) else 'Not a dict'}")
-        
         # Extract words from segments if available
         words = []
         if 'segments' in result:
             for segment in result['segments']:
                 if 'words' in segment:
                     words.extend(segment['words'])
-            print(f"🔍 Extracted {len(words)} words from segments")
-            if words:
-                print(f"🔍 First few words: {words[:3]}")
         
         # Add words to result for compatibility
         result['words'] = words
@@ -290,50 +283,49 @@ def create_practiced_lyrics(lyrics: list, blanks_info: list) -> list:
     return practiced_lyrics
 
 def create_blanks_with_timestamps(blanks_info: list, whisper_result: dict) -> list:
-    """Create Blank objects with timing information from Whisper"""
+    """Create Blank objects with timing information from Whisper - matching in chronological order"""
     blanks = []
     
-    print("🎯 Matching words with Whisper timestamps...")
-    
-    # Create a mapping from words to their timestamps
-    word_timestamps = {}
+    # Get Whisper words in chronological order
+    whisper_words = []
     if 'words' in whisper_result:
-        for word_info in whisper_result['words']:
-            word_text = word_info.get('word', '').strip().lower()
-            start_time = word_info.get('start', 0.0)
-            end_time = word_info.get('end', 0.0)
-            word_timestamps[word_text] = {
-                'start': start_time,
-                'end': end_time
-            }
+        whisper_words = whisper_result['words']
     
-    print(f"📊 Whisper found {len(word_timestamps)} words with timestamps")
+    print(f"📊 Whisper found {len(whisper_words)} words with timestamps")
     
-    for blank_info in blanks_info:
+    # Sort blanks_info by line_index and word_position to get chronological order
+    sorted_blanks = sorted(blanks_info, key=lambda x: (x['line_index'], x['word_position']))
+    
+    # Match each blank word with the next occurrence in Whisper words
+    whisper_index = 0
+    
+    for blank_info in sorted_blanks:
         original_word = blank_info['original_word'].strip().lower()
+        original_clean = original_word.strip().strip('.,!?;:"()[]{}').lower()
         
-        # Try exact match first
-        timing = word_timestamps.get(original_word, None)
-        
-        # If no exact match, try fuzzy matching (be more strict)
-        if not timing:
-            for whisper_word, whisper_timing in word_timestamps.items():
-                whisper_clean = whisper_word.strip().strip('.,!?;:"()[]{}').lower()
-                original_clean = original_word.strip().strip('.,!?;:"()[]{}').lower()
+        # Find the next matching word in Whisper words
+        timing = None
+        for i in range(whisper_index, len(whisper_words)):
+            whisper_word = whisper_words[i]
+            whisper_text = whisper_word.get('word', '').strip().lower()
+            whisper_clean = whisper_text.strip().strip('.,!?;:"()[]{}').lower()
+            
+            # Check for match - be more strict about word matching
+            if (whisper_clean == original_clean or
+                (len(original_clean) > 4 and whisper_clean.startswith(original_clean[:4])) or
+                (len(original_clean) > 4 and original_clean.startswith(whisper_clean[:4]))):
                 
-                # Only match if it's a substantial match (not just common words)
-                if (whisper_clean == original_clean or
-                    (len(original_clean) > 4 and 
-                     (whisper_clean.startswith(original_clean[:4]) or 
-                      original_clean.startswith(whisper_clean[:4])))):
-                    timing = whisper_timing
-                    print(f"🎯 Fuzzy matched '{original_word}' with '{whisper_word}' at {timing['start']:.2f}s")
-                    break
+                timing = {
+                    'start': whisper_word.get('start', 0.0),
+                    'end': whisper_word.get('end', 0.0)
+                }
+                whisper_index = i + 1  # Move to next word
+                print(f"✅ Matched '{original_word}' with Whisper word '{whisper_text}' at {timing['start']:.2f}s")
+                break
         
-        # If still no match, estimate based on line position
+        # If no match found, estimate based on position
         if not timing:
-            # Estimate timing based on line position (rough approximation)
-            estimated_start = blank_info['line_index'] * 6.0  # ~6 seconds per line
+            estimated_start = blank_info['line_index'] * 5.0  # ~5 seconds per line
             timing = {'start': estimated_start, 'end': estimated_start + 1.0}
             print(f"⚠️  No timestamp found for '{original_word}', estimated {timing['start']:.2f}s")
         
@@ -345,6 +337,13 @@ def create_blanks_with_timestamps(blanks_info: list, whisper_result: dict) -> li
             end_time=timing['end']
         )
         blanks.append(blank)
+    
+    # Sort by start_time to ensure chronological order
+    blanks.sort(key=lambda x: x.start_time)
+    
+    print(f"📝 Created {len(blanks)} blanks in chronological order")
+    for i, blank in enumerate(blanks):
+        print(f"  {i+1}. '{blank.original_word}' at {blank.start_time:.2f}s (line {blank.line_index}, word {blank.word_position})")
     
     return blanks
 
@@ -363,7 +362,6 @@ def generate_educational_song(subject: str, concepts: list, music_genre: str = "
     print("🎤 Composing music with ElevenLabs...")
     audio_data = compose_music(plan)
     
-    print("🎯 Transcribing audio with Whisper...")
     whisper_result = transcribe_audio_with_timestamps(audio_data, lyrics)
     
     print("📝 Creating practice materials...")
