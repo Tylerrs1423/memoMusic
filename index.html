@@ -4,9 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MemoMusic · Study With Sound</title>
-    <link rel="stylesheet" href="styles.css" />
+    <style>
+      *, *::before, *::after, html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, button, input, textarea, select, audio, video {
+        cursor: none !important;
+      }
+    </style>
+    <link rel="stylesheet" href="styles.css?v=6" />
   </head>
   <body>
+    <!-- Custom Animated Music Cursor -->
+    <div id="music-cursor" class="music-cursor">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3V12.55C11.41 12.21 10.73 12 10 12C7.79 12 6 13.79 6 16S7.79 20 10 20 14 18.21 14 16V8H18V6H14V3H12Z" fill="currentColor"/>
+      </svg>
+    </div>
+    
     <div class="background-gradient" aria-hidden="true"></div>
     <div class="ribbons-layer" aria-hidden="true"></div>
     <div class="floating-icons" aria-hidden="true">
@@ -26,7 +38,7 @@
     <header class="site-header">
       <div class="site-header__inner">
         <div class="brand">
-          <img src="logo.svg" alt="MemoMusic logo" class="brand-logo" />
+          <img src="logo.svg?v=2" alt="MemoMusic logo" class="brand-logo" />
           <span class="brand-name">MemoMusic</span>
         </div>
         <nav aria-label="Primary navigation">
@@ -204,27 +216,6 @@
           <div class="section-shell__content section-shell__content--split">
             <div class="section-shell__column section-shell__column--info">
               <ul class="section-points">
-                <li>
-                  <span class="section-point__icon" aria-hidden="true">🪄</span>
-                  <div>
-                    <h3>Adaptive loops</h3>
-                    <p>MemoMusic syncs motifs with your outline so key ideas repeat just enough.</p>
-                  </div>
-                </li>
-                <li>
-                  <span class="section-point__icon" aria-hidden="true">🎚️</span>
-                  <div>
-                    <h3>Style switching</h3>
-                    <p>Preview multiple vibes instantly and settle on the energy that suits tonight’s study sprint.</p>
-                  </div>
-                </li>
-                <li>
-                  <span class="section-point__icon" aria-hidden="true">⚡</span>
-                  <div>
-                    <h3>Smart cues</h3>
-                    <p>Concept tags become rhythmic shouts, whispered mnemonics, or melodic flourishes.</p>
-                  </div>
-                </li>
               </ul>
             </div>
             <div class="section-shell__column section-shell__column--main">
@@ -296,6 +287,17 @@
                   <ul class="concept-list" id="conceptList" aria-live="polite"></ul>
                 </div>
                 <label class="field">
+                  <span>Grade Level</span>
+                  <select id="grade-level-select" name="gradeLevel" required>
+                    <option value="">Select grade level</option>
+                    <option value="elementary school">Elementary School</option>
+                    <option value="middle school">Middle School</option>
+                    <option value="high school">High School</option>
+                    <option value="college">College</option>
+                    <option value="graduate">Graduate</option>
+                  </select>
+                </label>
+                <label class="field">
                   <span>Notes (optional)</span>
                   <textarea
                     id="notes-input"
@@ -313,7 +315,7 @@
                   <button type="button" id="save-track-btn" class="btn secondary">Save to library</button>
                 </div>
                 <div class="result-player">
-                  <audio id="preview-audio" controls preload="none">
+                  <audio id="preview-audio" class="music-cursor-target" controls preload="none">
                     <source src="https://cdn.pixabay.com/download/audio/2022/03/16/audio_ee04b25c65.mp3?filename=ambient-future-synth-110140.mp3" type="audio/mpeg" />
                     Your browser does not support the audio element.
                   </audio>
@@ -355,27 +357,6 @@
             </div>
             <div class="section-shell__column section-shell__column--info">
               <ul class="section-points section-points--compact">
-                <li>
-                  <span class="section-point__icon" aria-hidden="true">💾</span>
-                  <div>
-                    <h3>Offline by default</h3>
-                    <p>Your mixes stay in local storage, ready to replay even on airplane Wi-Fi.</p>
-                  </div>
-                </li>
-                <li>
-                  <span class="section-point__icon" aria-hidden="true">🧭</span>
-                  <div>
-                    <h3>Tag & regroup</h3>
-                    <p>Use concept cues to remember why you built a track and bring it back instantly.</p>
-                  </div>
-                </li>
-                <li>
-                  <span class="section-point__icon" aria-hidden="true">📤</span>
-                  <div>
-                    <h3>Share-ready</h3>
-                    <p>Export audio snippets or just let friends scan your screen for the queue.</p>
-                  </div>
-                </li>
               </ul>
             </div>
           </div>

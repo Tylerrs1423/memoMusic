@@ -24,6 +24,7 @@ const addConceptButton = document.getElementById('addConcept');
 const conceptListElement = document.getElementById('conceptList');
 const topicSelect = document.getElementById('topic-select');
 const notesInput = document.getElementById('notes-input');
+const gradeLevelSelect = document.getElementById('grade-level-select');
 
 const savedList = document.getElementById('saved-list');
 const savedEmptyState = document.getElementById('saved-empty');
@@ -209,13 +210,140 @@ function renderSavedTracks() {
     meta.className = 'saved-meta';
     meta.textContent = `${track.style} • ${new Date(track.createdAt).toLocaleDateString()}`;
 
+    // Create hidden audio element
     const audio = document.createElement('audio');
-    audio.controls = true;
     audio.preload = 'none';
+    audio.style.display = 'none';
     const source = document.createElement('source');
     source.src = track.audioUrl;
     source.type = 'audio/mpeg';
     audio.appendChild(source);
+    
+    // Create custom audio player for saved tracks
+    const playerContainer = document.createElement('div');
+    playerContainer.className = 'saved-custom-audio-player';
+    playerContainer.style.cssText = `
+      width: 100%;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 8px;
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    `;
+    
+    // Create small play button
+    const playButton = document.createElement('button');
+    playButton.innerHTML = '▶';
+    playButton.style.cssText = `
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    `;
+    
+    // Simple hover effect
+    playButton.addEventListener('mouseenter', () => {
+      playButton.style.background = 'rgba(255,255,255,0.2)';
+    });
+    
+    playButton.addEventListener('mouseleave', () => {
+      playButton.style.background = 'rgba(255,255,255,0.1)';
+    });
+    
+    // Create small progress bar
+    const progressContainer = document.createElement('div');
+    progressContainer.style.cssText = `
+      flex: 1;
+      height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      position: relative;
+      cursor: pointer;
+    `;
+    
+    const progressBar = document.createElement('div');
+    progressBar.style.cssText = `
+      height: 100%;
+      background: #ffffff;
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.1s ease;
+    `;
+    
+    progressContainer.appendChild(progressBar);
+    
+    // Create time display
+    const timeDisplay = document.createElement('div');
+    timeDisplay.style.cssText = `
+      color: #cccccc;
+      font-size: 11px;
+      font-weight: 400;
+      min-width: 60px;
+      text-align: center;
+      font-family: inherit;
+    `;
+    timeDisplay.textContent = '0:00 / 0:00';
+    
+    // Add elements to container
+    playerContainer.appendChild(playButton);
+    playerContainer.appendChild(progressContainer);
+    playerContainer.appendChild(timeDisplay);
+    
+    // Audio control logic
+    let isPlaying = false;
+    
+    playButton.addEventListener('click', () => {
+      if (isPlaying) {
+        audio.pause();
+        playButton.innerHTML = '▶';
+        isPlaying = false;
+      } else {
+        audio.play();
+        playButton.innerHTML = '⏸';
+        isPlaying = true;
+      }
+    });
+    
+    // Update progress bar
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = progress + '%';
+        
+        // Update time display
+        const current = Math.floor(audio.currentTime);
+        const total = Math.floor(audio.duration);
+        timeDisplay.textContent = `${Math.floor(current/60)}:${(current%60).toString().padStart(2, '0')} / ${Math.floor(total/60)}:${(total%60).toString().padStart(2, '0')}`;
+      }
+    });
+    
+    // Handle audio end
+    audio.addEventListener('ended', () => {
+      playButton.innerHTML = '▶';
+      isPlaying = false;
+      progressBar.style.width = '0%';
+    });
+    
+    // Handle progress bar click
+    progressContainer.addEventListener('click', (e) => {
+      if (audio.duration) {
+        const rect = progressContainer.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percentage = clickX / rect.width;
+        audio.currentTime = percentage * audio.duration;
+      }
+    });
 
     const actions = document.createElement('div');
     actions.className = 'card-actions';
@@ -254,7 +382,49 @@ function renderSavedTracks() {
       conceptsLine.textContent = `Concept cues: ${track.concepts.join(', ')}`;
       card.appendChild(conceptsLine);
     }
-    card.append(meta, audio, actions);
+
+    // Add lyrics display for saved tracks - clean and simple
+    if (track.lyrics && track.lyrics.length > 0) {
+      const lyricsTitle = document.createElement('h4');
+      lyricsTitle.textContent = 'Lyrics';
+      lyricsTitle.style.cssText = `
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        margin: 10px 0 6px 0;
+        text-align: center;
+      `;
+      
+      const lyricsList = document.createElement('div');
+      lyricsList.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-bottom: 10px;
+      `;
+      
+      track.lyrics.forEach((line, index) => {
+        if (line.trim()) {
+          const lineDiv = document.createElement('div');
+          lineDiv.style.cssText = `
+            font-size: 12px;
+            font-weight: 400;
+            color: #cccccc;
+            line-height: 1.4;
+            text-align: center;
+            padding: 2px 0;
+          `;
+          
+          lineDiv.innerHTML = line;
+          lyricsList.appendChild(lineDiv);
+        }
+      });
+      
+      card.appendChild(lyricsTitle);
+      card.appendChild(lyricsList);
+    }
+
+    card.append(meta, playerContainer, audio, actions);
     savedList.appendChild(card);
   });
 }
@@ -612,6 +782,7 @@ createForm.addEventListener('submit', (event) => {
   const topicLabel = topicSelect.options[topicSelect.selectedIndex]?.text || topicValue;
   const displayTopic = topicSelect.value === 'Other' ? (topicValue || 'Custom topic') : topicLabel;
   const notesValue = (notesInput?.value || '').trim();
+  const selectedGradeLevel = gradeLevelSelect.value;
   const selectedStyle = styleSelect.value;
   const styleCustom = styleInput ? styleInput.value.trim() : '';
   const displayStyle = selectedStyle === 'Other'
@@ -652,6 +823,13 @@ createForm.addEventListener('submit', (event) => {
     return;
   }
 
+  if (!selectedGradeLevel) {
+    gradeLevelSelect.focus();
+    gradeLevelSelect.classList.add('input-error');
+    window.setTimeout(() => gradeLevelSelect.classList.remove('input-error'), 900);
+    return;
+  }
+
   if (selectedStyle === 'Other') {
     customStyle = styleCustom;
   } else {
@@ -671,7 +849,7 @@ createForm.addEventListener('submit', (event) => {
     concepts: [...conceptBuffer],
     music_genre: displayStyle,
     notes: notesValue,
-    grade_level: "high school"
+    grade_level: selectedGradeLevel
   };
 
   console.log('Sending request to backend:', requestData);
@@ -712,34 +890,205 @@ createForm.addEventListener('submit', (event) => {
       resultDescription.textContent += ` (Concept cues: ${conceptBuffer.join(', ')})`;
     }
     
-    // Show lyrics
+    // Show lyrics - clean and simple
     if (data.lyrics && data.lyrics.length > 0) {
-      const lyricsDiv = document.createElement('div');
-      lyricsDiv.innerHTML = '<h4>Generated Lyrics:</h4>' + data.lyrics.map(line => `<p>${line}</p>`).join('');
-      resultDescription.appendChild(lyricsDiv);
+      const lyricsTitle = document.createElement('h3');
+      lyricsTitle.textContent = 'Lyrics';
+      lyricsTitle.style.cssText = `
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 20px 0 12px 0;
+        text-align: center;
+      `;
+      
+      const lyricsList = document.createElement('div');
+      lyricsList.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 20px;
+      `;
+      
+      data.lyrics.forEach((line, index) => {
+        if (line.trim()) {
+          const lineDiv = document.createElement('div');
+          lineDiv.style.cssText = `
+            font-size: 15px;
+            font-weight: 400;
+            color: #cccccc;
+            line-height: 1.5;
+            text-align: center;
+            padding: 4px 0;
+          `;
+          
+          lineDiv.innerHTML = line;
+          lyricsList.appendChild(lineDiv);
+        }
+      });
+      
+      resultDescription.appendChild(lyricsTitle);
+      resultDescription.appendChild(lyricsList);
     }
 
-    // Update audio player with real audio
+    // Create custom audio player
     const audioSource = previewAudio.querySelector('source');
     if (audioSource) {
       const audioUrl = `http://localhost:8000${data.audio_url}`;
-      console.log('Setting audio source to:', audioUrl);
       audioSource.src = audioUrl;
-      previewAudio.load(); // Reload the audio element
+      previewAudio.load();
       
-      // Add event listeners to debug audio loading
-      previewAudio.addEventListener('loadstart', () => console.log('Audio: Load started'));
-      previewAudio.addEventListener('canplay', () => console.log('Audio: Can play'));
-      previewAudio.addEventListener('error', (e) => console.log('Audio error:', e));
+      // Hide default controls and create custom player
+      previewAudio.controls = false;
+      
+      // Remove existing custom player if any
+      const existingPlayer = resultDescription.querySelector('.custom-audio-player');
+      if (existingPlayer) {
+        existingPlayer.remove();
+      }
+      
+      // Create custom audio player container - match app style
+      const playerContainer = document.createElement('div');
+      playerContainer.className = 'custom-audio-player';
+      playerContainer.style.cssText = `
+        width: 100%;
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      `;
+      
+      // Create play/pause button - match your buttons
+      const playButton = document.createElement('button');
+      playButton.innerHTML = '▶';
+      playButton.style.cssText = `
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #ffffff;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      `;
+      
+      // Simple hover effect
+      playButton.addEventListener('mouseenter', () => {
+        playButton.style.background = 'rgba(255,255,255,0.2)';
+      });
+      
+      playButton.addEventListener('mouseleave', () => {
+        playButton.style.background = 'rgba(255,255,255,0.1)';
+      });
+      
+      // Create progress bar container - match app style
+      const progressContainer = document.createElement('div');
+      progressContainer.style.cssText = `
+        flex: 1;
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+        position: relative;
+        cursor: pointer;
+      `;
+      
+      // Create progress bar - match app colors
+      const progressBar = document.createElement('div');
+      progressBar.style.cssText = `
+        height: 100%;
+        background: #ffffff;
+        border-radius: 2px;
+        width: 0%;
+        transition: width 0.1s ease;
+      `;
+      
+      progressContainer.appendChild(progressBar);
+      
+      // Create time display - match app text style
+      const timeDisplay = document.createElement('div');
+      timeDisplay.style.cssText = `
+        color: #cccccc;
+        font-size: 13px;
+        font-weight: 400;
+        min-width: 80px;
+        text-align: center;
+        font-family: inherit;
+      `;
+      timeDisplay.textContent = '0:00 / 0:00';
+      
+      // Add all elements to container
+      playerContainer.appendChild(playButton);
+      playerContainer.appendChild(progressContainer);
+      playerContainer.appendChild(timeDisplay);
+      
+      // Add player to the result description
+      resultDescription.appendChild(playerContainer);
+      
+      // Audio control logic
+      let isPlaying = false;
+      
+      playButton.addEventListener('click', () => {
+        if (isPlaying) {
+          previewAudio.pause();
+          playButton.innerHTML = '▶';
+          isPlaying = false;
+        } else {
+          previewAudio.play();
+          playButton.innerHTML = '⏸';
+          isPlaying = true;
+        }
+      });
+      
+      // Update progress bar
+      previewAudio.addEventListener('timeupdate', () => {
+        if (previewAudio.duration) {
+          const progress = (previewAudio.currentTime / previewAudio.duration) * 100;
+          progressBar.style.width = progress + '%';
+          
+          // Update time display
+          const current = Math.floor(previewAudio.currentTime);
+          const total = Math.floor(previewAudio.duration);
+          timeDisplay.textContent = `${Math.floor(current/60)}:${(current%60).toString().padStart(2, '0')} / ${Math.floor(total/60)}:${(total%60).toString().padStart(2, '0')}`;
+        }
+      });
+      
+      // Handle audio end
+      previewAudio.addEventListener('ended', () => {
+        playButton.innerHTML = '▶';
+        isPlaying = false;
+        progressBar.style.width = '0%';
+      });
+      
+      // Handle progress bar click
+      progressContainer.addEventListener('click', (e) => {
+        if (previewAudio.duration) {
+          const rect = progressContainer.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const percentage = clickX / rect.width;
+          previewAudio.currentTime = percentage * previewAudio.duration;
+        }
+      });
     }
 
     saveTrackBtn.disabled = false;
     saveTrackBtn.textContent = 'Save to library';
   })
   .catch(error => {
-    console.error('Error:', error);
+    console.error('Frontend error:', error);
+    console.error('Error type:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
     resultTitle.textContent = 'Error generating song';
-    resultDescription.textContent = 'There was a problem creating your educational song. Please try again.';
+    resultDescription.textContent = `There was a problem creating your educational song. Error: ${error.message}`;
     saveTrackBtn.disabled = false;
     saveTrackBtn.textContent = 'Try Again';
   });
@@ -837,5 +1186,158 @@ window.addEventListener('DOMContentLoaded', () => {
     enableFade: false,
     enableShaderEffect: true
   });
+  
+  // Initialize custom music cursor
+  initMusicCursor();
 });
+
+// Custom Music Cursor
+class MusicCursor {
+  constructor() {
+    this.cursor = document.getElementById('music-cursor');
+    this.isActive = false;
+    this.currentAnimation = '';
+    this.isPlaying = false;
+    this.mouseX = 0;
+    this.mouseY = 0;
+    this.cursorX = 0;
+    this.cursorY = 0;
+    this.animationId = null;
+    
+    this.init();
+  }
+  
+  init() {
+    // Track mouse movement with throttling
+    let lastTime = 0;
+    document.addEventListener('mousemove', (e) => {
+      this.mouseX = e.clientX;
+      this.mouseY = e.clientY;
+      
+      if (!this.animationId) {
+        this.animationId = requestAnimationFrame(() => {
+          this.updatePosition();
+          this.animationId = null;
+        });
+      }
+    });
+    
+    // Add hover listeners to music elements
+    this.addMusicElementListeners();
+    
+    // Listen for audio events
+    this.addAudioListeners();
+    
+    // Show cursor on page load
+    this.show();
+  }
+  
+  updatePosition() {
+    if (this.cursor) {
+      // Smooth interpolation for lag-free movement
+      this.cursorX += (this.mouseX - this.cursorX) * 0.3;
+      this.cursorY += (this.mouseY - this.cursorY) * 0.3;
+      
+      this.cursor.style.transform = `translate(${this.cursorX - 16}px, ${this.cursorY - 16}px)`;
+    }
+  }
+  
+  show() {
+    if (this.cursor) {
+      this.cursor.classList.add('active');
+      this.isActive = true;
+    }
+  }
+  
+  hide() {
+    if (this.cursor) {
+      this.cursor.classList.remove('active');
+      this.isActive = false;
+    }
+  }
+  
+  addAnimation(animation) {
+    if (this.cursor) {
+      this.cursor.classList.remove('bounce', 'pulse', 'spin', 'hovering', 'playing');
+      this.cursor.classList.add(animation);
+      this.currentAnimation = animation;
+    }
+  }
+  
+  removeAnimation() {
+    if (this.cursor) {
+      this.cursor.classList.remove('bounce', 'pulse', 'spin', 'hovering', 'playing');
+      this.currentAnimation = '';
+    }
+  }
+  
+  addMusicElementListeners() {
+    // Add listeners to existing music elements
+    const musicElements = document.querySelectorAll('.music-cursor-target, audio, .result-player, .saved-tracks .card');
+    
+    musicElements.forEach(element => {
+      element.addEventListener('mouseenter', () => {
+        this.addAnimation('hovering');
+      });
+      
+      element.addEventListener('mouseleave', () => {
+        if (!this.isPlaying) {
+          this.removeAnimation();
+        }
+      });
+    });
+    
+    // Watch for dynamically added elements
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) { // Element node
+            const audioElements = node.querySelectorAll ? node.querySelectorAll('audio, .result-player, .saved-tracks .card') : [];
+            audioElements.forEach(element => {
+              element.addEventListener('mouseenter', () => {
+                this.addAnimation('hovering');
+              });
+              
+              element.addEventListener('mouseleave', () => {
+                if (!this.isPlaying) {
+                  this.removeAnimation();
+                }
+              });
+            });
+          }
+        });
+      });
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  
+  addAudioListeners() {
+    document.addEventListener('play', (e) => {
+      if (e.target.tagName === 'AUDIO') {
+        this.isPlaying = true;
+        this.addAnimation('playing');
+      }
+    });
+    
+    document.addEventListener('pause', (e) => {
+      if (e.target.tagName === 'AUDIO') {
+        this.isPlaying = false;
+        this.removeAnimation();
+      }
+    });
+    
+    document.addEventListener('ended', (e) => {
+      if (e.target.tagName === 'AUDIO') {
+        this.isPlaying = false;
+        this.removeAnimation();
+      }
+    });
+  }
+}
+
+// Initialize custom cursor
+function initMusicCursor() {
+  musicCursor = new MusicCursor();
+}
 

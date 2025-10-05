@@ -76,12 +76,21 @@ def create_composition_plan(lyrics: list, music_genre: str = "pop") -> dict:
     response.raise_for_status()
     plan = response.json()
 
-
+    # Debug: Print the original plan structure
+    print(f"ElevenLabs original plan: {plan}")
+    
+    # Keep the original plan structure but only modify the first section's lines
     if plan.get("sections"):
+        # Only replace the lyrics, keep everything else intact
         plan["sections"][0]["lines"] = lyrics
         plan["sections"][0]["positive_local_styles"] = [music_genre]
-        plan["sections"][0]["duration_ms"] = 48000
-
+        
+        # If there are multiple sections, remove extra sections to keep only our 8 lines
+        if len(plan["sections"]) > 1:
+            plan["sections"] = [plan["sections"][0]]  # Keep only first section
+            plan["sections"][0]["duration_ms"] = 48000  # Set total duration
+    
+    print(f"Modified plan: {len(plan.get('sections', []))} section(s)")
     return plan
 
 def compose_music(composition_plan: dict) -> bytes:
@@ -97,7 +106,12 @@ def compose_music(composition_plan: dict) -> bytes:
         "respect_sections_durations": True
     }
     response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
+    
+    if not response.ok:
+        print(f"ElevenLabs music generation error: {response.status_code}")
+        print(f"Response: {response.text}")
+        response.raise_for_status()
+    
     return response.content
 
 def generate_educational_song(subject: str, concepts: list, music_genre: str = "pop", grade_level: str = "high school") -> dict:
