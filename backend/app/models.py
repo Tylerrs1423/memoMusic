@@ -12,6 +12,7 @@ class Frontend(BaseModel):
     concepts: List[str]
     music_genre: str
     notes: str
+    grade_level: str = "high school"
 
 class Gemini(BaseModel):
     string: str
@@ -32,14 +33,14 @@ class ElevenUrl(BaseModel):
 
 class Session(BaseModel):
     session_id: str
-    subject: str  # Added missing field
+    subject: str
     concepts: List[str]
     music_genre: str
-    notes: str  # Added missing field
+    notes: str
     lyrics: List[str]
     practiced_lyrics: List[str]
     blanks: List[Blank]
-    audio_url: str
+    audio_data: bytes  # Store audio data directly
     created_at: datetime
     updated_at: datetime
 
