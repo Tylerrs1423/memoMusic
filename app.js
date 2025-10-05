@@ -20,6 +20,10 @@ const resultTitle = document.getElementById('result-title');
 const resultDescription = document.getElementById('result-description');
 const saveTrackBtn = document.getElementById('save-track-btn');
 const previewAudio = document.getElementById('preview-audio');
+const resultStyleTag = document.getElementById('result-tag-style');
+const resultGradeTag = document.getElementById('result-tag-grade');
+const resultConceptsTag = document.getElementById('result-tag-concepts');
+const createSectionContent = document.querySelector('.section-shell__content--split');
 
 const conceptInput = document.getElementById('conceptInput');
 const addConceptButton = document.getElementById('addConcept');
@@ -128,6 +132,70 @@ function ensureSectionsAreVisible() {
       section.hidden = false;
     }
   });
+}
+
+function formatGradeLabel(value) {
+  if (!value) return '';
+  return value.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function updateResultTags({ style = '', grade = '', concepts = null } = {}) {
+  if (resultStyleTag) {
+    if (style) {
+      resultStyleTag.textContent = style;
+      resultStyleTag.hidden = false;
+    } else {
+      resultStyleTag.hidden = true;
+    }
+  }
+
+  if (resultGradeTag) {
+    if (grade) {
+      resultGradeTag.textContent = grade;
+      resultGradeTag.hidden = false;
+    } else {
+      resultGradeTag.hidden = true;
+    }
+  }
+
+  if (resultConceptsTag) {
+    if (typeof concepts === 'number' && concepts > 0) {
+      const label = concepts === 1 ? '1 concept cue' : `${concepts} concept cues`;
+      resultConceptsTag.textContent = label;
+      resultConceptsTag.hidden = false;
+    } else {
+      resultConceptsTag.hidden = true;
+    }
+  }
+}
+
+function showResultLayout({ fullWidth = true } = {}) {
+  if (!generateResult) return;
+  generateResult.hidden = false;
+  if (fullWidth) {
+    generateResult.classList.add('full-width');
+  } else {
+    generateResult.classList.remove('full-width');
+  }
+
+  if (createForm) {
+    createForm.classList.add('form--submitted');
+  }
+  createSectionContent?.classList.add('is-stacked');
+
+  window.requestAnimationFrame(() => {
+    generateResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function setResultSummary(text) {
+  if (!resultDescription) return;
+  resultDescription.innerHTML = '';
+  if (text) {
+    const summary = document.createElement('p');
+    summary.textContent = text;
+    resultDescription.appendChild(summary);
+  }
 }
 
 function activateSection(sectionId, { withScroll = true, behavior = 'smooth', updateHash = true } = {}) {
@@ -808,23 +876,14 @@ createForm.addEventListener('submit', (event) => {
     console.log(`🎬 Demo mode: Loading ${displayTopic} session`);
     
     // Show loading state and hide form
-    generateResult.hidden = false;
-    if (createForm) {
-      createForm.style.display = 'none'; // Hide the form
-      generateResult.classList.add('full-width'); // Make results full width
-      
-      // Change grid to single column layout
-      const sectionContent = document.querySelector('.section-shell__content--split');
-      if (sectionContent) {
-        sectionContent.style.gridTemplateColumns = '1fr';
-      }
-    }
+    showResultLayout({ fullWidth: true });
     resultTitle.textContent = 'Generating your educational song...';
-    resultDescription.textContent = 'Creating lyrics and music with AI...';
+    setResultSummary('Creating lyrics and music with AI...');
+    updateResultTags();
     saveTrackBtn.disabled = true;
     saveTrackBtn.textContent = 'Generating...';
     
-    // Simulate AI generation time (10+ seconds)
+    // Simulate AI generation time (≈8 seconds)
     setTimeout(() => {
       // Load session data from MongoDB via API
       fetch(`http://localhost:8000/api/session/${demoSessionId}`)
@@ -852,10 +911,21 @@ createForm.addEventListener('submit', (event) => {
           blanks: sessionData.blanks,
           createdAt: timestamp.toISOString()
         };
-        
+
+        updateResultTags({
+          style: sessionData.music_genre || 'MemoMix',
+          grade: formatGradeLabel(sessionData.grade_level || selectedGradeLevel),
+          concepts: Array.isArray(sessionData.concepts) ? sessionData.concepts.length : 0
+        });
+
         // Display the loaded song
         resultTitle.textContent = `${title} — ${sessionData.subject}`;
-        resultDescription.textContent = description;
+        let demoSummary = description;
+        const demoConceptCount = Array.isArray(sessionData.concepts) ? sessionData.concepts.length : 0;
+        if (demoConceptCount) {
+          demoSummary += ` · ${demoConceptCount === 1 ? '1 concept cue' : `${demoConceptCount} concept cues`}`;
+        }
+        setResultSummary(demoSummary);
         
         // Update the existing preview audio element with demo audio
         if (previewAudio) {
@@ -947,11 +1017,12 @@ createForm.addEventListener('submit', (event) => {
         .catch(error => {
           console.error('Failed to load demo session:', error);
           resultTitle.textContent = 'Error loading demo song';
-          resultDescription.textContent = 'Failed to load pre-saved content';
+          setResultSummary('Failed to load pre-saved content');
+          updateResultTags();
           saveTrackBtn.disabled = false;
           saveTrackBtn.textContent = 'Try Again';
         });
-    }, 3000); // 3 second delay to simulate AI generation
+    }, 8000); // 8 second delay to simulate AI generation
     
     return; // Exit early, don't make real API call
   }
@@ -1004,19 +1075,10 @@ createForm.addEventListener('submit', (event) => {
   }
 
   // Show loading state and hide form
-  generateResult.hidden = false;
-  if (createForm) {
-    createForm.style.display = 'none'; // Hide the form
-    generateResult.classList.add('full-width'); // Make results full width
-    
-    // Change grid to single column layout
-    const sectionContent = document.querySelector('.section-shell__content--split');
-    if (sectionContent) {
-      sectionContent.style.gridTemplateColumns = '1fr';
-    }
-  }
+  showResultLayout({ fullWidth: true });
   resultTitle.textContent = 'Generating your educational song...';
-  resultDescription.textContent = 'Creating lyrics and music with AI...';
+  setResultSummary('Creating lyrics and music with AI...');
+  updateResultTags();
   saveTrackBtn.disabled = true;
   saveTrackBtn.textContent = 'Generating...';
 
@@ -1067,11 +1129,18 @@ createForm.addEventListener('submit', (event) => {
     createdAt: timestamp.toISOString()
   };
 
+  updateResultTags({
+    style: displayStyle,
+    grade: formatGradeLabel(selectedGradeLevel),
+    concepts: conceptBuffer.length
+  });
+
   resultTitle.textContent = `${title} — ${displayTopic}`;
-  resultDescription.textContent = description;
+  let summaryText = description;
   if (conceptBuffer.length) {
-    resultDescription.textContent += ` (Concept cues: ${conceptBuffer.join(', ')})`;
+    summaryText += ` · ${conceptBuffer.length === 1 ? '1 concept cue' : `${conceptBuffer.length} concept cues`}`;
   }
+  setResultSummary(summaryText);
     
     // Show lyrics with practice interface
     if (data.lyrics && data.lyrics.length > 0) {
@@ -1305,6 +1374,7 @@ createForm.addEventListener('submit', (event) => {
   })
   .catch(error => {
     console.error('Frontend error:', error);
+    updateResultTags();
     console.error('Error type:', error.name);
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
@@ -1312,9 +1382,7 @@ createForm.addEventListener('submit', (event) => {
     if (resultTitle) {
     resultTitle.textContent = 'Error generating song';
     }
-    if (resultDescription) {
-    resultDescription.textContent = `There was a problem creating your educational song. Error: ${error.message}`;
-    }
+    setResultSummary(`There was a problem creating your educational song. Error: ${error.message}`);
     if (saveTrackBtn) {
     saveTrackBtn.disabled = false;
     saveTrackBtn.textContent = 'Try Again';

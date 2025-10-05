@@ -299,16 +299,34 @@
                 <button type="submit" class="btn primary generate-btn">Generate memo mix</button>
               </form>
               <aside id="generate-result" class="card result stage-card" hidden>
-                <div class="result-info">
-                  <h3 id="result-title">Memo Mix Preview</h3>
-                  <p id="result-description"></p>
-                  <button type="button" id="save-track-btn" class="btn secondary">Save to library</button>
-                </div>
-                <div class="result-player">
-                  <audio id="preview-audio" class="music-cursor-target" controls preload="none">
-                    <source src="https://cdn.pixabay.com/download/audio/2022/03/16/audio_ee04b25c65.mp3?filename=ambient-future-synth-110140.mp3" type="audio/mpeg" />
-                    Your browser does not support the audio element.
-                  </audio>
+                <div class="result-shell">
+                  <div class="result-visual" aria-hidden="true">
+                    <div class="result-visual__glow"></div>
+                    <div class="result-visual__badge">
+                      <span class="result-visual__icon">♪</span>
+                      <span class="result-visual__label">MemoMix</span>
+                    </div>
+                  </div>
+                  <div class="result-content">
+                    <div class="result-headline">
+                      <h3 id="result-title">Memo Mix Preview</h3>
+                      <ul class="result-tags">
+                        <li id="result-tag-style" class="result-tag" hidden></li>
+                        <li id="result-tag-grade" class="result-tag" hidden></li>
+                        <li id="result-tag-concepts" class="result-tag" hidden></li>
+                      </ul>
+                    </div>
+                    <div id="result-description" class="result-description"></div>
+                    <div class="result-player">
+                      <audio id="preview-audio" class="music-cursor-target" controls preload="none">
+                        <source src="https://cdn.pixabay.com/download/audio/2022/03/16/audio_ee04b25c65.mp3?filename=ambient-future-synth-110140.mp3" type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                    <div class="result-actions">
+                      <button type="button" id="save-track-btn" class="btn secondary">Save to library</button>
+                    </div>
+                  </div>
                 </div>
               </aside>
             </div>
