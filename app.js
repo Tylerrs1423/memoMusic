@@ -1,4 +1,4 @@
-import { initDecryptedText } from './decrypted-text.js';
+import { initTextType } from './text-type.js';
 import { initShinyText } from './shiny-text.js';
 import { initRibbons } from './ribbons.js';
 
@@ -148,7 +148,7 @@ function activateSection(sectionId, { withScroll = true, behavior = 'smooth', up
   focusSection(targetSection);
 
   if (sectionId === 'menu') {
-    initDecryptedText();
+    initTextType({ restart: true });
   }
 
   header?.classList.remove('open');
@@ -1251,7 +1251,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (styleSelect) {
     setStyleInputState(styleSelect.value || '');
   }
-  initDecryptedText();
+  initTextType();
   initShinyText();
   initAnimationLibrary();
   initRibbons({

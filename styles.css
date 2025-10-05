@@ -804,7 +804,10 @@ main {
   text-transform: uppercase;
   display: block;
   max-width: 100%;
-  color: var(--text-primary);
+  background: linear-gradient(120deg, #f8fafc 0%, #a855f7 50%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 
@@ -1886,7 +1889,6 @@ textarea:focus {
   background-clip: text;
   color: transparent;
   white-space: normal;
-  -webkit-text-fill-color: transparent;
 }
 
 .text-type__cursor {
@@ -1898,7 +1900,6 @@ textarea:focus {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-fill-color: transparent;
 }
 
 .text-type__cursor--hidden {
