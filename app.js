@@ -883,7 +883,7 @@ createForm.addEventListener('submit', (event) => {
     saveTrackBtn.disabled = true;
     saveTrackBtn.textContent = 'Generating...';
     
-    // Simulate AI generation time (≈8 seconds)
+    // Simulate AI generation time (≈12 seconds)
     setTimeout(() => {
       // Load session data from MongoDB via API
       fetch(`http://localhost:8000/api/session/${demoSessionId}`)
@@ -1022,7 +1022,7 @@ createForm.addEventListener('submit', (event) => {
           saveTrackBtn.disabled = false;
           saveTrackBtn.textContent = 'Try Again';
         });
-    }, 8000); // 8 second delay to simulate AI generation
+    }, 12000); // 12 second delay to simulate AI generation
     
     return; // Exit early, don't make real API call
   }
